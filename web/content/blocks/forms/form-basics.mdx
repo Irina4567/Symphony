@@ -1,0 +1,81 @@
+До сих пор BookShelf принимал данные только как сырой JSON (Блок 1) — удобно для API, но
+пользователь браузера не пишет JSON руками. В этом блоке подключаем компонент **Form**: с его
+помощью Symfony строит, рендерит и обрабатывает HTML-формы, не заставляя писать разметку и
+парсинг входных данных вручную.
+
+## FormType — форма как класс
+
+```php
+namespace App\Form;
+
+use App\Entity\Book;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+class BookFormType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder
+            ->add('title', TextType::class, ['label' => 'Название'])
+            ->add('year', IntegerType::class, ['label' => 'Год издания']);
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults(['data_class' => Book::class]);
+    }
+}
+```
+
+`data_class` связывает форму с конкретным классом — Symfony будет вызывать `setTitle()`/
+`setYear()` на объекте `Book` при заполнении формы и `getTitle()`/`getYear()` при её первичном
+отображении. Типов полей много: `TextType`, `IntegerType`, `EmailType`, `ChoiceType`,
+`CheckboxType`, `DateType` и десятки других — полный список смотри в документации компонента Form.
+
+## Создание и рендер формы в контроллере
+
+```php
+use App\Form\BookFormType;
+
+#[Route('/books/new', name: 'books_new', methods: ['GET'])]
+public function new(): Response
+{
+    $form = $this->createForm(BookFormType::class, new Book());
+
+    return $this->render('books/new.html.twig', ['form' => $form]);
+}
+```
+
+`createForm()` — хелпер `AbstractController`, второй аргумент — объект, который форма будет
+заполнять (пустой `new Book()` для создания, существующий объект — для редактирования).
+
+## Рендер в Twig
+
+```twig
+{{ form(form) }}
+```
+
+Одна строка — и получаешь полностью рабочую форму со всеми полями, лейблами и `<form>`-тегом.
+Для более тонкого контроля над разметкой каждого поля есть `form_start(form)`, `form_row(form.title)`,
+`form_errors(form)`, `form_end(form)` — собираются вручную, поле за полем.
+
+## А как же CSRF-защита?
+
+В реальном проекте Symfony автоматически добавляет в форму скрытое CSRF-поле (когда установлен
+компонент `symfony/security-csrf`) — токен, привязанный к текущей сессии, который защищает от
+подделки межсайтовых запросов: без правильного токена сервер отклонит отправку формы, даже если
+запрос пришёл с правильными данными, но с чужого сайта. Это стоит **всегда оставлять включённым**
+в реальном проекте — это поведение по умолчанию.
+
+В песочнице этого блока `symfony/security-csrf` намеренно не подключен — это сильно упрощает
+автоматические HTTP-проверки упражнений, которым иначе пришлось бы вытаскивать токен из HTML и
+подставлять его в следующий запрос. Считай это техническим упрощением песочницы, а не тем, как
+стоит делать в реальном проекте.
+
+<CodeExercise exerciseId="form-build" />
+
+<Quiz quizId="form-basics" />

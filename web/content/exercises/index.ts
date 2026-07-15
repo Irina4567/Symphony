@@ -16,6 +16,11 @@ import { doctrineCrudExercise } from "./doctrine-crud";
 import { doctrineQueryExercise } from "./doctrine-query";
 import { doctrineRelationExercise } from "./doctrine-relation";
 import { bookshelfDoctrineExercise } from "./bookshelf-doctrine";
+import { formBuildExercise } from "./form-build";
+import { validationConstraintsExercise } from "./validation-constraints";
+import { formSubmitExercise } from "./form-submit";
+import { flashMessagesExercise } from "./flash-messages";
+import { bookshelfFormExercise } from "./bookshelf-form";
 
 export const exercises: Record<string, Exercise> = {
   [oopWarmupExercise.id]: oopWarmupExercise,
@@ -35,6 +40,11 @@ export const exercises: Record<string, Exercise> = {
   [doctrineQueryExercise.id]: doctrineQueryExercise,
   [doctrineRelationExercise.id]: doctrineRelationExercise,
   [bookshelfDoctrineExercise.id]: bookshelfDoctrineExercise,
+  [formBuildExercise.id]: formBuildExercise,
+  [validationConstraintsExercise.id]: validationConstraintsExercise,
+  [formSubmitExercise.id]: formSubmitExercise,
+  [flashMessagesExercise.id]: flashMessagesExercise,
+  [bookshelfFormExercise.id]: bookshelfFormExercise,
 };
 
 export function getExercise(id: string): Exercise | undefined {

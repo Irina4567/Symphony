@@ -14,6 +14,10 @@ import { entityBasicsQuiz } from "./entity-basics";
 import { entityManagerQuiz } from "./entity-manager";
 import { queryBuilderQuiz } from "./query-builder";
 import { relationsQuiz } from "./relations";
+import { formBasicsQuiz } from "./form-basics";
+import { validationQuiz } from "./validation";
+import { formHandlingQuiz } from "./form-handling";
+import { flashAndRedirectQuiz } from "./flash-and-redirect";
 
 export const quizzes: Record<string, Quiz> = {
   [whatIsSymfonyQuiz.id]: whatIsSymfonyQuiz,
@@ -31,6 +35,10 @@ export const quizzes: Record<string, Quiz> = {
   [entityManagerQuiz.id]: entityManagerQuiz,
   [queryBuilderQuiz.id]: queryBuilderQuiz,
   [relationsQuiz.id]: relationsQuiz,
+  [formBasicsQuiz.id]: formBasicsQuiz,
+  [validationQuiz.id]: validationQuiz,
+  [formHandlingQuiz.id]: formHandlingQuiz,
+  [flashAndRedirectQuiz.id]: flashAndRedirectQuiz,
 };
 
 export function getQuiz(id: string): Quiz | undefined {

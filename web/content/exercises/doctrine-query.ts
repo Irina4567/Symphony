@@ -8,6 +8,10 @@ export const doctrineQueryExercise: Exercise = {
     "База уже засеяна тремя книгами (1984/1949, Clean Code/2008, Dune/1965). Допиши метод репозитория, который через QueryBuilder возвращает книги, изданные после заданного года, отсортированные по году по возрастанию.",
   targetPath: "src/Repository/BookRepository.php",
   setupCommands: ["php bin/console doctrine:schema:create", "php bin/console app:seed-books"],
+  contextFiles: [
+    { path: "src/Entity/Book.php", description: "поля, по которым можно строить запрос" },
+    { path: "src/Command/SeedBooksCommand.php", description: "чем именно засеяна база перед проверками" },
+  ],
   starterCode: `<?php
 
 namespace App\\Repository;

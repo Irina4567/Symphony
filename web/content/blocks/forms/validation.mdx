@@ -1,0 +1,81 @@
+Форма собирает данные — но откуда взяться уверенности, что эти данные корректны? За это отвечает
+компонент **Validator** и его constraints (ограничения).
+
+## Constraints на свойствах Entity
+
+```php
+namespace App\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+#[ORM\Entity]
+class Book
+{
+    #[Assert\NotBlank(message: 'Введите название книги')]
+    #[Assert\Length(min: 2, max: 255)]
+    #[ORM\Column(length: 255)]
+    private string $title = '';
+
+    #[Assert\Range(min: 1450, max: 2100)]
+    #[ORM\Column]
+    private int $year = 0;
+
+    // ...
+}
+```
+
+Обрати внимание: `#[Assert\...]` и `#[ORM\...]` спокойно уживаются над одним и тем же свойством —
+атрибуты PHP не мешают друг другу. Ограничения размещают именно на Entity (а не только в
+FormType), потому что так они действуют **везде**, откуда бы объект ни пришёл — из формы, из
+JSON-запроса API, из консольной команды импорта книг. Один источник правды вместо дублирования
+одних и тех же проверок в трёх местах.
+
+## Частые constraints
+
+```php
+#[Assert\NotBlank]                          // не пусто
+#[Assert\Length(min: 2, max: 255)]          // длина строки
+#[Assert\Range(min: 0, max: 100)]           // числовой диапазон
+#[Assert\Email]                             // формат email
+#[Assert\Positive]                          // положительное число
+#[Assert\Choice(choices: ['fiction', 'nonfiction'])]  // одно из перечисленных значений
+```
+
+У большинства constraints можно переопределить текст сообщения об ошибке через `message:`
+(или `notInRangeMessage:` и подобные варианты для составных ограничений вроде `Range`).
+
+## Проверка вручную, без формы
+
+Форма вызывает Validator автоматически внутри `isValid()`, но ничего не мешает проверить объект
+и напрямую:
+
+```php
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+public function check(ValidatorInterface $validator): JsonResponse
+{
+    $book = new Book();
+    $book->setTitle(''); // пусто — нарушит NotBlank
+
+    $violations = $validator->validate($book);
+
+    if (count($violations) > 0) {
+        $messages = [];
+        foreach ($violations as $violation) {
+            $messages[] = $violation->getMessage();
+        }
+        return new JsonResponse(['errors' => $messages], 400);
+    }
+
+    return new JsonResponse(['ok' => true]);
+}
+```
+
+Именно так устроена валидация в JSON API BookShelf (Блок 1) — там мы проверяли поля руками
+через `empty()`. Constraints делают то же самое декларативно, с готовыми сообщениями об ошибках
+и без необходимости писать `if` на каждое поле.
+
+<CodeExercise exerciseId="validation-constraints" />
+
+<Quiz quizId="validation" />

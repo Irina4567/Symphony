@@ -10,6 +10,8 @@ export interface HttpRequestSpec {
   method: HttpMethod;
   path: string;
   body?: string;
+  /** По умолчанию application/json. Для отправки формы — "application/x-www-form-urlencoded". */
+  contentType?: string;
 }
 
 export type HttpCheck =
@@ -27,6 +29,13 @@ interface ExerciseBase {
   hint?: string;
 }
 
+export interface ContextFile {
+  /** Путь внутри Symfony-скелета песочницы, например src/Entity/Book.php. */
+  path: string;
+  /** Короткая пометка, зачем этот файл нужен именно для этого упражнения. */
+  description?: string;
+}
+
 export type Exercise =
   | (ExerciseBase & { mode: "plain-php"; checks: Check[] })
   | (ExerciseBase & {
@@ -37,6 +46,9 @@ export type Exercise =
       checks: HttpCheck[];
       /** Консольные команды (например, doctrine:schema:create), выполняются до старта сервера. */
       setupCommands?: string[];
+      /** Уже существующие в песочнице файлы, которые полезно увидеть перед тем, как писать код
+       *  (например, Entity или FormType, зашитые в образ, — то, на что опирается это упражнение). */
+      contextFiles?: ContextFile[];
     });
 
 interface QuizQuestionBase {

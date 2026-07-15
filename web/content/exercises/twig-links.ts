@@ -7,6 +7,12 @@ export const twigLinksExercise: Exercise = {
   description:
     'Контроллер передаёт в шаблон bookId = 42. Сгенерируй ссылку на маршрут book_show_page функцией path(), а не хардкодом строки.',
   targetPath: "templates/exercises/links.html.twig",
+  contextFiles: [
+    {
+      path: "src/Controller/TwigExerciseController.php",
+      description: "откуда взялся bookId и как называется маршрут book_show_page",
+    },
+  ],
   starterCode: `{# TODO: замени "#" на path('book_show_page', {id: bookId}) #}
 <a href="#">Открыть книгу</a>
 `,

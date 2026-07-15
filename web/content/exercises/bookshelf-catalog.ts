@@ -7,6 +7,13 @@ export const bookshelfCatalogExercise: Exercise = {
   description:
     "Собери воедино всё из этого блока: расширь базовый макет, выведи список книг ссылками на страницу каждой книги, и не забудь про случай пустого каталога.",
   targetPath: "templates/exercises/bookshelf_catalog.html.twig",
+  contextFiles: [
+    { path: "templates/exercises/base.html.twig", description: "родительский макет, который нужно расширить" },
+    {
+      path: "src/Controller/TwigExerciseController.php",
+      description: "маршруты exercise_bookshelf_catalog(-empty) и форма данных books",
+    },
+  ],
   starterCode: `{# TODO: расширь exercises/base.html.twig #}
 
 {% block title %}{# TODO: "Каталог книг" #}{% endblock %}

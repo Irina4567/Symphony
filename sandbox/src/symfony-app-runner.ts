@@ -17,6 +17,9 @@ export interface HttpRequestSpec {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
   body?: string;
+  /** По умолчанию application/json. Для form-urlencoded передайте
+   *  "application/x-www-form-urlencoded". */
+  contentType?: string;
 }
 
 export interface HttpRequestResult {
@@ -197,12 +200,20 @@ export async function runSymfonyApp(input: {
       const log = await run("docker", ["exec", containerName, "cat", "/tmp/server.log"], 2000);
       stderr += `Сервер приложения не поднялся вовремя.\n${log.stdout}\n`;
     } else if (ready) {
+      // Общий cookie jar на всю последовательность запросов одного упражнения — сессия
+      // (флеш-сообщения, в будущем — логин) переживает границу между отдельными curl-вызовами
+      // точно так же, как переживал бы её один и тот же браузер.
+      const cookieJar = "/tmp/sandbox-cookies.txt";
       for (const reqSpec of input.requests) {
         const curlArgs = [
           "exec",
           containerName,
           "curl",
           "-s",
+          "-c",
+          cookieJar,
+          "-b",
+          cookieJar,
           "--max-time",
           String(REQUEST_TIMEOUT_S),
           "-X",
@@ -211,7 +222,7 @@ export async function runSymfonyApp(input: {
           `\n${STATUS_MARKER}%{http_code}`,
         ];
         if (reqSpec.body !== undefined) {
-          curlArgs.push("-H", "Content-Type: application/json", "-d", reqSpec.body);
+          curlArgs.push("-H", `Content-Type: ${reqSpec.contentType ?? "application/json"}`, "-d", reqSpec.body);
         }
         curlArgs.push(`http://127.0.0.1:8000${reqSpec.path}`);
 

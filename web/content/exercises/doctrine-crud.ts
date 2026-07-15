@@ -8,6 +8,7 @@ export const doctrineCrudExercise: Exercise = {
     "Entity Book уже готова (и зашита в песочницу). Допиши контроллер: создай новую книгу из JSON-тела запроса и сохрани её через EntityManager.",
   targetPath: "src/Controller/BookCrudController.php",
   setupCommands: ["php bin/console doctrine:schema:create"],
+  contextFiles: [{ path: "src/Entity/Book.php", description: "готовая Entity, с которой работает EntityManager" }],
   starterCode: `<?php
 
 namespace App\\Controller;

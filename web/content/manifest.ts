@@ -276,6 +276,66 @@ export const manifest: BlockManifestEntry[] = [
       practiceExerciseId: "bookshelf-doctrine",
     },
   },
+  {
+    slug: "forms",
+    title: "Блок 4. Формы и валидация",
+    description:
+      "От JSON-запросов к настоящей HTML-форме: FormType, ограничения (constraints) на Entity, обработка отправки и flash-сообщения с редиректом. BookShelf получает страницу добавления книги, которую можно открыть в браузере.",
+    lessons: [
+      {
+        slug: "form-basics",
+        title: "FormType: строим и рендерим форму",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "validation",
+        title: "Validator: ограничения на данные",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "form-handling",
+        title: "Обработка отправки: handleRequest, isValid",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "flash-and-redirect",
+        title: "Flash-сообщения и Post/Redirect/Get",
+        estimatedMinutes: 8,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 4: форма добавления книги",
+      description:
+        "Собери три действия: список книг, пустая форма и её обработка — с сохранением и редиректом при успехе или повторным показом формы с ошибками при провале. Entity, FormType и шаблон формы уже готовы — фокус на контроллере.",
+      note: "Проверяется полностью автоматически прямо в браузере — 7 проверок, включая полный цикл: список пуст → форма отрисована → успешная отправка (редирект) → книга появилась в списке → невалидная отправка повторно показывает форму с ошибкой.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "BookFormType, Entity Book (с constraints) и шаблон exercises/book_form.html.twig уже зашиты в песочницу — тебе нужно написать только контроллер с тремя действиями.",
+        },
+        {
+          id: "implement-index-and-new",
+          title: "Реализуй index и new",
+          description: "index — список книг в JSON. new — просто создать форму и отрендерить шаблон.",
+        },
+        {
+          id: "implement-create",
+          title: "Реализуй create с Post/Redirect/Get",
+          description:
+            "handleRequest → если валидна, сохрани и сделай addFlash + redirectToRoute('books_index'); если нет — верни ту же форму (страница сама покажет ошибки).",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все проверки",
+          description: "Нажми «Запустить» и обрати внимание на статус 422 у невалидной отправки — это не баг, а поведение Symfony по умолчанию.",
+          expectedResult: "Все 7 проверок зелёные.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-form",
+    },
+  },
 ];
 
 export function getBlock(blockSlug: string): BlockManifestEntry | undefined {

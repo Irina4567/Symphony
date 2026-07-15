@@ -8,6 +8,7 @@ export const doctrineRelationExercise: Exercise = {
     "Entity Author уже готова. Добавь в Book связь на Author вместо строки с именем автора — и проверь, что связь переживает выгрузку из identity map и повторное чтение из базы.",
   targetPath: "src/Entity/Book.php",
   setupCommands: ["php bin/console doctrine:schema:create"],
+  contextFiles: [{ path: "src/Entity/Author.php", description: "сущность, на которую нужно сослаться" }],
   starterCode: `<?php
 
 namespace App\\Entity;

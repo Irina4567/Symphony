@@ -8,6 +8,12 @@ export const bookshelfDoctrineExercise: Exercise = {
     "Тот же контракт API, что и в Блоке 1 (список, книга по id, создание) — но на этот раз книги по-настоящему сохраняются в SQLite через Doctrine. Entity Book/Author и сидинг трёх книг уже готовы.",
   targetPath: "src/Controller/BookController.php",
   setupCommands: ["php bin/console doctrine:schema:create", "php bin/console app:seed-books"],
+  contextFiles: [
+    { path: "src/Entity/Book.php", description: "готовая сущность книги" },
+    { path: "src/Entity/Author.php", description: "готовая сущность автора" },
+    { path: "src/Repository/BookRepository.php", description: "репозиторий, который использует findAll()/find()" },
+    { path: "src/Command/SeedBooksCommand.php", description: "чем засеяна база перед проверками" },
+  ],
   starterCode: `<?php
 
 namespace App\\Controller;

@@ -16,6 +16,7 @@ const httpRequestSchema = z.object({
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
   path: z.string().min(1),
   body: z.string().optional(),
+  contentType: z.string().max(100).optional(),
 });
 
 const runRequestSchema = z.discriminatedUnion("mode", [

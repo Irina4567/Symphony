@@ -7,6 +7,9 @@ export const twigExtendsExercise: Exercise = {
   description:
     "Базовый макет exercises/base.html.twig уже существует (в нём объявлены блоки title и content). Расширь его и переопредели оба блока.",
   targetPath: "templates/exercises/child.html.twig",
+  contextFiles: [
+    { path: "templates/exercises/base.html.twig", description: "родительский макет, который нужно расширить" },
+  ],
   starterCode: `{# TODO: расширь родительский шаблон exercises/base.html.twig #}
 
 {% block title %}{# TODO: "Моя страница" #}{% endblock %}

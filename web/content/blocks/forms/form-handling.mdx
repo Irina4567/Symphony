@@ -1,0 +1,59 @@
+Форма построена, ограничения расставлены — осталось связать это с реальным HTTP-запросом:
+принять отправленные данные, проверить их и либо сохранить, либо показать ошибки.
+
+## handleRequest, isSubmitted, isValid
+
+```php
+use App\Entity\Book;
+use App\Form\BookFormType;
+
+#[Route('/books/new', methods: ['GET', 'POST'])]
+public function new(Request $request, EntityManagerInterface $em): Response
+{
+    $book = new Book();
+    $form = $this->createForm(BookFormType::class, $book);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $em->persist($book);
+        $em->flush();
+
+        return $this->redirectToRoute('books_index');
+    }
+
+    return $this->render('books/new.html.twig', ['form' => $form]);
+}
+```
+
+Один и тот же метод обслуживает оба случая:
+
+- **GET** (первый заход) — `handleRequest()` ничего не меняет, `isSubmitted()` вернёт `false`,
+  контроллер просто рендерит пустую форму.
+- **POST** (отправка) — `handleRequest()` заполняет `$book` данными из запроса.
+  Если `isValid()` — сохраняем и уходим с редиректом. Если нет — рендерим ту же форму снова,
+  и она сама покажет сообщения об ошибках рядом с проблемными полями.
+
+## getData() и getErrors()
+
+```php
+$book = $form->getData();          // тот же объект Book, что передали в createForm()
+
+foreach ($form->getErrors(true) as $error) {
+    echo $error->getMessage();      // текст constraint-сообщения
+}
+```
+
+Второй параметр `true` в `getErrors(true)` — «собери ошибки рекурсивно», включая ошибки на
+уровне отдельных полей, а не только на уровне формы целиком.
+
+## Умный код ответа по умолчанию
+
+Начиная с недавних версий Symfony, если ты рендеришь шаблон с **невалидной, но отправленной**
+формой, фреймворк сам проставляет HTTP-код **422 Unprocessable Entity** вместо обычного 200 —
+даже без явного указания. Семантически это куда честнее: запрос был корректно понят сервером, но
+данные в нём не прошли проверку. Полезная деталь, о которой стоит знать, если пишешь тесты или
+клиентский код, ожидающий конкретный код ответа.
+
+<CodeExercise exerciseId="form-submit" />
+
+<Quiz quizId="form-handling" />

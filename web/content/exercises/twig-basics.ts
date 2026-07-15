@@ -7,6 +7,12 @@ export const twigBasicsExercise: Exercise = {
   description:
     "Контроллер для этого маршрута уже написан и передаёт в шаблон name и price. Допиши шаблон: выведи имя в верхнем регистре и цену с двумя знаками после запятой.",
   targetPath: "templates/exercises/basics.html.twig",
+  contextFiles: [
+    {
+      path: "src/Controller/TwigExerciseController.php",
+      description: "какие переменные контроллер передаёт в шаблон",
+    },
+  ],
   starterCode: `{# TODO: выведи name в верхнем регистре через фильтр |upper #}
 
 {# TODO: выведи price, отформатированную как число с 2 знаками после запятой через |number_format(2) #}

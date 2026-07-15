@@ -5,7 +5,6 @@ import { BlockCard } from "@/components/block-card";
 import { Button } from "@/components/ui/button";
 
 const upcoming = [
-  { title: "Формы и валидация", contribution: "Форма добавления книги, CSRF, flash-сообщения" },
   { title: "Security", contribution: "Вход пользователей, права на создание и редактирование книг" },
   { title: "Dependency Injection вглубь", contribution: "Сервис рекомендаций книг, интерфейсы, автовайринг" },
   { title: "EventDispatcher", contribution: "Событие при добавлении книги и подписчик на него" },

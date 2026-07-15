@@ -7,6 +7,12 @@ export const twigLoopExercise: Exercise = {
   description:
     "Один и тот же шаблон рендерится дважды: со списком книг и с пустым списком. Выведи каждую книгу в <li>, а для пустого случая — сообщение об этом.",
   targetPath: "templates/exercises/loop.html.twig",
+  contextFiles: [
+    {
+      path: "src/Controller/TwigExerciseController.php",
+      description: "какие данные передаются в books в обоих случаях",
+    },
+  ],
   starterCode: `<ul>
 {% for book in books %}
     {# TODO: выведи <li>{{ book.title }}</li> #}
