@@ -1,0 +1,58 @@
+Если `Response` — это то, что контроллер отдаёт наружу, то `Request` — то, что приходит внутрь.
+Разберёмся, как читать входящий запрос: query-параметры, тело запроса, заголовки.
+
+## Request как аргумент метода
+
+Чтобы получить доступ к запросу, достаточно указать тайп-хинт `Request` в аргументах метода —
+Symfony сам передаст туда текущий объект запроса, ничего дополнительно внедрять не нужно:
+
+```php
+use Symfony\Component\HttpFoundation\Request;
+
+#[Route('/search', name: 'search', methods: ['GET'])]
+public function search(Request $request): Response
+{
+    $query = $request->query->get('q', '');
+
+    return new Response("Ищем: {$query}");
+}
+```
+
+## Query-параметры vs параметры пути
+
+Мы уже видели параметры пути (`{id}` в `/books/{id}`) — они обязательны для совпадения маршрута.
+Query-параметры (`?lang=en&page=2`) — необязательное уточнение поверх уже определившегося
+маршрута, доступны через `$request->query`:
+
+```php
+$request->query->get('lang', 'ru');   // 'en' или 'ru', если параметра нет
+$request->query->getInt('page', 1);   // сразу приведёт к int
+$request->query->has('debug');        // bool — есть ли параметр вообще
+```
+
+`$request->query` — это `InputBag` (специализированный контейнер параметров), а не голый массив,
+поэтому у него есть typed-геттеры вроде `getInt()`/`getBoolean()`, а не только `get()`.
+
+## Тело запроса
+
+Для form-data (`Content-Type: application/x-www-form-urlencoded` или `multipart/form-data`)
+поля лежат в `$request->request` (да, это специально сбивающее с толку название — historical
+baggage самого HTTP: `$_GET` → `->query`, `$_POST` → `->request`). Но для JSON API, с которым мы
+работаем в BookShelf, тело нужно читать иначе — сырой строкой:
+
+```php
+$raw = $request->getContent(); // '{"title":"Dune","author":"Frank Herbert"}'
+```
+
+Дальше эту строку превращаем в массив через `json_decode()` — этим и займёмся в следующем уроке.
+
+## Коды ошибок на стороне клиента
+
+Если разбор запроса показал, что клиент прислал что-то не то (не JSON, не хватает полей, не тот
+тип) — это **не** повод отвечать 500. Пятисотка сигнализирует о поломке на сервере; если сервер
+корректно распознал невалидный запрос и вежливо на него ответил — это как раз штатная работа,
+код должен быть 400.
+
+<CodeExercise exerciseId="greet-query" />
+
+<Quiz quizId="request-and-query" />

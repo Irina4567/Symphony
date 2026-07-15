@@ -1,0 +1,64 @@
+Последний кусочек перед мини-проектом: как правильно отдавать и принимать JSON — то, из чего
+будет состоять почти весь API BookShelf.
+
+## JsonResponse
+
+`JsonResponse` — наследник `Response`, который берёт на себя рутину: сериализует переданные
+данные в JSON и сам выставляет заголовок `Content-Type: application/json`.
+
+```php
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+#[Route('/api/books', name: 'books_list', methods: ['GET'])]
+public function list(): JsonResponse
+{
+    return new JsonResponse([
+        ['id' => 1, 'title' => '1984'],
+        ['id' => 2, 'title' => 'Dune'],
+    ]);
+}
+```
+
+Второй аргумент — код ответа, как и у обычного `Response`: `new JsonResponse($data, 201)` для
+только что созданного ресурса, `new JsonResponse(['error' => '...'], 404)` для ошибки.
+
+## Разбор JSON-тела запроса
+
+Раз клиент присылает JSON, а не form-data, читаем сырое тело и декодируем сами:
+
+```php
+public function create(Request $request): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
+    // $data — обычный ассоциативный PHP-массив (второй аргумент true — важно!)
+}
+```
+
+Без `true` вторым аргументом `json_decode` вернёт объект `stdClass` вместо массива — работать
+с ним менее удобно, и во всём курсе мы договариваемся использовать именно массивы.
+
+## Ручная валидация — до компонента Validator
+
+Компонент Validator (с атрибутами `#[Assert\NotBlank]` и т.д.) появится в блоке про формы — это
+куда более мощный инструмент. Но уже сейчас, на голых массивах, можно и нужно защититься от
+совсем некорректных данных:
+
+```php
+if (empty($data['title']) || empty($data['author'])) {
+    return new JsonResponse(['error' => 'title and author are required'], 400);
+}
+```
+
+`empty()` тут удачнее, чем `isset()` — он также отсеет случай, когда поле пришло, но пустой
+строкой (`"title": ""`), а не просто отсутствует в JSON.
+
+## Маленький, но важный нюанс: кодировка
+
+По умолчанию `json_encode()` (а значит и `JsonResponse`) экранирует все не-ASCII символы —
+кириллица превращается в последовательности `\uXXXX`. Это валидный JSON, любой клиент его
+корректно распарсит, но глазами читать неудобно. Если понадобится человекочитаемый JSON с
+кириллицей — есть флаг `JSON_UNESCAPED_UNICODE`, до которого мы ещё доберёмся.
+
+<CodeExercise exerciseId="echo-api" />
+
+<Quiz quizId="json-api" />
