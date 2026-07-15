@@ -30,6 +30,10 @@ const runRequestSchema = z.discriminatedUnion("mode", [
     targetPath: z.string().min(1).max(200),
     requests: z.array(httpRequestSchema).min(1).max(10),
     setupCommands: z.array(z.string().min(1).max(300)).max(5).optional(),
+    fixtureOverrides: z
+      .array(z.object({ path: z.string().min(1).max(200), content: z.string().max(MAX_CODE_LENGTH) }))
+      .max(5)
+      .optional(),
   }),
 ]);
 
@@ -59,6 +63,7 @@ app.post("/run", async (req, res) => {
         targetPath: parsed.data.targetPath,
         requests: parsed.data.requests,
         setupCommands: parsed.data.setupCommands,
+        fixtureOverrides: parsed.data.fixtureOverrides,
       });
       res.json(result);
     }

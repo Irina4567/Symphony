@@ -113,6 +113,7 @@ export async function POST(request: Request) {
         targetPath: exercise.targetPath,
         requests: exercise.requests,
         setupCommands: exercise.setupCommands,
+        fixtureOverrides: exercise.fixtureOverrides,
       },
       35_000
     );

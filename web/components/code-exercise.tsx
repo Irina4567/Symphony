@@ -139,7 +139,7 @@ export function CodeExercise({ exerciseId }: { exerciseId: string }) {
   return (
     <>
       {exercise.mode === "symfony-app" && exercise.contextFiles && exercise.contextFiles.length > 0 && (
-        <ContextFiles files={exercise.contextFiles} />
+        <ContextFiles files={exercise.contextFiles} exerciseId={exerciseId} />
       )}
       <div className="not-prose my-8 overflow-hidden rounded-xl border border-border bg-surface">
         <div className="border-b border-border px-4 py-3">

@@ -1,17 +1,19 @@
 import type { Exercise } from "../types";
+import { constrainedBookPhp } from "./shared/constrained-book";
 
 export const formSubmitExercise: Exercise = {
   id: "form-submit",
   mode: "symfony-app",
   title: "Обработай отправку формы",
   description:
-    "FormType и Entity уже готовы (с констрейнтами). Прими отправленную форму, проверь её валидность и либо сохрани книгу, либо верни ошибки.",
+    "FormType готов, а Entity Book уже пополнилась constraints, которые ты написал в прошлом уроке. Прими отправленную форму, проверь её валидность и либо сохрани книгу, либо верни ошибки.",
   targetPath: "src/Controller/BookSubmitController.php",
   setupCommands: ["php bin/console doctrine:schema:create"],
   contextFiles: [
     { path: "src/Form/BookFormType.php", description: "готовая форма, которую нужно обработать" },
-    { path: "src/Entity/Book.php", description: "constraints, из-за которых форма может быть невалидной" },
+    { path: "src/Entity/Book.php", description: "constraints из прошлого урока, из-за которых форма может быть невалидной" },
   ],
+  fixtureOverrides: [{ path: "src/Entity/Book.php", content: constrainedBookPhp }],
   starterCode: `<?php
 
 namespace App\\Controller;

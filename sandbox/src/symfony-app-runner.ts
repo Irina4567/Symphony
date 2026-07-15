@@ -82,6 +82,9 @@ export async function runSymfonyApp(input: {
   /** Консольные команды (например, doctrine:schema:create), выполняются после cp кода
    *  ученика и до старта сервера — нужны блокам, где упражнение требует подготовленную БД. */
   setupCommands?: string[];
+  /** Дополнительные файлы, которые кладутся в проект вместе с основным кодом ученика —
+   *  переопределяют обычно-статичные фикстуры только для этого запуска. */
+  fixtureOverrides?: { path: string; content: string }[];
 }): Promise<SymfonyAppRunResult> {
   const dir = await mkdtemp(join(tmpdir(), "symfony-course-app-"));
   const codeFile = join(dir, "code.php");
@@ -138,6 +141,20 @@ export async function runSymfonyApp(input: {
     const cp = await run("docker", ["cp", codeFile, `${containerName}:${targetPath}`], 5000);
     if (cp.exitCode !== 0) {
       stderr += `Не удалось поместить код в проект: ${cp.stderr}\n`;
+    }
+
+    for (const override of input.fixtureOverrides ?? []) {
+      const overrideFile = join(dir, `override-${randomUUID()}.txt`);
+      await writeFile(overrideFile, override.content, "utf8");
+      const overrideTargetPath = `/skeleton/${override.path.replace(/^\/+/, "")}`;
+      const overrideCp = await run(
+        "docker",
+        ["cp", overrideFile, `${containerName}:${overrideTargetPath}`],
+        5000
+      );
+      if (overrideCp.exitCode !== 0) {
+        stderr += `Не удалось поместить ${override.path} в проект: ${overrideCp.stderr}\n`;
+      }
     }
 
     let setupFailed = false;

@@ -4,13 +4,16 @@ namespace App\Entity;
 
 use App\Repository\BookRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Постоянная фикстура — ученик её не редактирует, кроме упражнений, которые прямо просят
  * написать/расширить Entity (targetPath на время своего запуска подменяет собой эту фикстуру
- * в одноразовом контейнере): урок 1 и урок 4 блока про Doctrine — маппинг и связь; урок 2
- * блока про формы — Assert-констрейнты (в этой версии они уже есть).
+ * в одноразовом контейнере): урок 1 и урок 4 блока про Doctrine — маппинг и связь.
+ *
+ * У этой версии сознательно нет Assert-констрейнтов — блок про Doctrine их ещё не проходил.
+ * Упражнениям блока про формы, которым constraints нужны функционально (не только для показа),
+ * они передаются через fixtureOverrides в самом упражнении — см. content/exercises/form-submit.ts
+ * и bookshelf-form.ts.
  */
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book
@@ -21,12 +24,9 @@ class Book
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'Введите название книги')]
-    #[Assert\Length(min: 2, max: 255)]
     private string $title = '';
 
     #[ORM\Column]
-    #[Assert\Range(min: 1450, max: 2100, notInRangeMessage: 'Год должен быть между {{ min }} и {{ max }}')]
     private int $year = 0;
 
     #[ORM\ManyToOne]

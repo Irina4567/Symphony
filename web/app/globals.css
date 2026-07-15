@@ -6,7 +6,7 @@
 :root {
   --background: #f8fafc;
   --surface: #ffffff;
-  --surface-muted: #686b6e;
+  --surface-muted: #f1f5f9;
   --foreground: #0f172a;
   --muted: #64748b;
   --border: #e2e8f0;
@@ -100,11 +100,18 @@ body {
 }
 
 .prose-lesson pre {
+  /* Typography переопределяет --tw-prose-pre-code/--tw-prose-pre-bg прямо на pre (полагая,
+     что блок кода всегда выглядит как тёмный редактор независимо от темы страницы) — задаём
+     переменные и сам цвет здесь же, а не на родителе, иначе оверрайд не долетает. */
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--surface-muted);
   background: var(--surface-muted);
+  color: var(--foreground);
   border: 1px solid var(--border);
 }
 
 .prose-lesson pre code {
   background: transparent;
+  color: inherit;
   padding: 0;
 }

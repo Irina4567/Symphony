@@ -1,4 +1,5 @@
 import type { Exercise } from "../types";
+import { constrainedBookPhp } from "./shared/constrained-book";
 
 export const bookshelfFormExercise: Exercise = {
   id: "bookshelf-form",
@@ -10,9 +11,10 @@ export const bookshelfFormExercise: Exercise = {
   setupCommands: ["php bin/console doctrine:schema:create"],
   contextFiles: [
     { path: "src/Form/BookFormType.php", description: "готовая форма" },
-    { path: "src/Entity/Book.php", description: "готовая сущность с constraints" },
+    { path: "src/Entity/Book.php", description: "готовая сущность с constraints из прошлых уроков" },
     { path: "templates/exercises/book_form.html.twig", description: "шаблон, который рендерит форму" },
   ],
+  fixtureOverrides: [{ path: "src/Entity/Book.php", content: constrainedBookPhp }],
   starterCode: `<?php
 
 namespace App\\Controller;
