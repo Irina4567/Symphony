@@ -11,6 +11,11 @@ import { twigLoopExercise } from "./twig-loop";
 import { twigExtendsExercise } from "./twig-extends";
 import { twigLinksExercise } from "./twig-links";
 import { bookshelfCatalogExercise } from "./bookshelf-catalog";
+import { doctrineEntityExercise } from "./doctrine-entity";
+import { doctrineCrudExercise } from "./doctrine-crud";
+import { doctrineQueryExercise } from "./doctrine-query";
+import { doctrineRelationExercise } from "./doctrine-relation";
+import { bookshelfDoctrineExercise } from "./bookshelf-doctrine";
 
 export const exercises: Record<string, Exercise> = {
   [oopWarmupExercise.id]: oopWarmupExercise,
@@ -25,6 +30,11 @@ export const exercises: Record<string, Exercise> = {
   [twigExtendsExercise.id]: twigExtendsExercise,
   [twigLinksExercise.id]: twigLinksExercise,
   [bookshelfCatalogExercise.id]: bookshelfCatalogExercise,
+  [doctrineEntityExercise.id]: doctrineEntityExercise,
+  [doctrineCrudExercise.id]: doctrineCrudExercise,
+  [doctrineQueryExercise.id]: doctrineQueryExercise,
+  [doctrineRelationExercise.id]: doctrineRelationExercise,
+  [bookshelfDoctrineExercise.id]: bookshelfDoctrineExercise,
 };
 
 export function getExercise(id: string): Exercise | undefined {

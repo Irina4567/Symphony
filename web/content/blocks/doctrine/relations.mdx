@@ -1,0 +1,77 @@
+Последний кусочек перед мини-проектом: связи между сущностями. Пока что имя автора книги было
+просто строкой — а это значит, опечатку в имени пришлось бы чинить в каждой книге отдельно.
+Разберёмся, как это делают правильно.
+
+## ManyToOne — самая частая связь
+
+```php
+namespace App\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity]
+class Book
+{
+    // ...
+
+    #[ORM\ManyToOne]
+    private ?Author $author = null;
+
+    public function getAuthor(): ?Author
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(?Author $author): static
+    {
+        $this->author = $author;
+        return $this;
+    }
+}
+```
+
+Читается так: **много** книг (Many) ссылаются на **одного** автора (One). В базе данных это
+физически означает столбец `author_id` в таблице `book`, который ссылается на `id` в таблице
+`author`. Doctrine сама выведет целевую сущность из PHP-типа свойства (`?Author`) — указывать
+`targetEntity` вручную для простых случаев не обязательно.
+
+## Использование
+
+```php
+$author = new Author();
+$author->setName('Frank Herbert');
+$em->persist($author);
+
+$book = new Book();
+$book->setTitle('Dune');
+$book->setAuthor($author); // просто присвоить объект, не строку и не id
+$em->persist($book);
+$em->flush();
+```
+
+Doctrine сама разберётся, что нужно сначала сохранить `Author` (или использовать уже
+существующий, если он не новый), а потом — `Book` со ссылкой на него.
+
+## Обратная сторона: OneToMany
+
+Если нужно уметь получить «все книги этого автора» через сам объект `Author` — на его стороне
+объявляют обратную (инверсную) связь:
+
+```php
+#[ORM\OneToMany(mappedBy: 'author', targetEntity: Book::class)]
+private Collection $books;
+```
+
+`mappedBy: 'author'` указывает на то самое свойство `$author` в классе `Book` — эта сторона
+связи не хранит собственного внешнего ключа, она просто отражает уже существующую связь для
+удобства навигации по коду в обе стороны.
+
+## Зачем это в реальном проекте
+
+Тот же принцип DRY, что и с наследованием шаблонов и с `path()` вместо хардкода URL: факт
+(«книгу написал именно этот автор, с именно таким именем») хранится в одном месте. Изменить
+имя автора — одна строка в таблице `author`, а не поиск-и-замена по всем книгам.
+
+<CodeExercise exerciseId="doctrine-relation" />
+
+<Quiz quizId="relations" />

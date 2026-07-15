@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
 const DOCKER_IMAGE = "symfony-app-sandbox";
-const OVERALL_TIMEOUT_MS = 15_000;
+const OVERALL_TIMEOUT_MS = 20_000;
+const SETUP_COMMAND_TIMEOUT_MS = 8000;
 const MAX_OUTPUT_BYTES = 32 * 1024;
 const SERVER_READY_TIMEOUT_MS = 4000;
 const REQUEST_TIMEOUT_S = 3;
@@ -75,6 +76,9 @@ export async function runSymfonyApp(input: {
   code: string;
   targetPath: string;
   requests: HttpRequestSpec[];
+  /** Консольные команды (например, doctrine:schema:create), выполняются после cp кода
+   *  ученика и до старта сервера — нужны блокам, где упражнение требует подготовленную БД. */
+  setupCommands?: string[];
 }): Promise<SymfonyAppRunResult> {
   const dir = await mkdtemp(join(tmpdir(), "symfony-course-app-"));
   const codeFile = join(dir, "code.php");
@@ -133,50 +137,66 @@ export async function runSymfonyApp(input: {
       stderr += `Не удалось поместить код в проект: ${cp.stderr}\n`;
     }
 
-    await run(
-      "docker",
-      [
-        "exec",
-        "-d",
-        containerName,
-        "sh",
-        "-c",
-        "cd /skeleton && php -S 127.0.0.1:8000 -t public public/index.php > /tmp/server.log 2>&1",
-      ],
-      5000
-    );
+    let setupFailed = false;
+    for (const command of input.setupCommands ?? []) {
+      const setup = await run(
+        "docker",
+        ["exec", containerName, "sh", "-c", `cd /skeleton && ${command}`],
+        SETUP_COMMAND_TIMEOUT_MS
+      );
+      if (setup.exitCode !== 0) {
+        stderr += `Ошибка на шаге настройки (${command}):\n${setup.stdout}\n${setup.stderr}\n`;
+        setupFailed = true;
+        break;
+      }
+    }
 
-    const readyDeadline = Date.now() + SERVER_READY_TIMEOUT_MS;
     let ready = false;
-    while (Date.now() < readyDeadline) {
-      const probe = await run(
+    if (!setupFailed) {
+      await run(
         "docker",
         [
           "exec",
+          "-d",
           containerName,
-          "curl",
-          "-s",
-          "-o",
-          "/dev/null",
-          "-w",
-          "%{http_code}",
-          "--max-time",
-          "1",
-          "http://127.0.0.1:8000/",
+          "sh",
+          "-c",
+          "cd /skeleton && php -S 127.0.0.1:8000 -t public public/index.php > /tmp/server.log 2>&1",
         ],
-        2000
+        5000
       );
-      if (probe.stdout.trim().length > 0) {
-        ready = true;
-        break;
+
+      const readyDeadline = Date.now() + SERVER_READY_TIMEOUT_MS;
+      while (Date.now() < readyDeadline) {
+        const probe = await run(
+          "docker",
+          [
+            "exec",
+            containerName,
+            "curl",
+            "-s",
+            "-o",
+            "/dev/null",
+            "-w",
+            "%{http_code}",
+            "--max-time",
+            "1",
+            "http://127.0.0.1:8000/",
+          ],
+          2000
+        );
+        if (probe.stdout.trim().length > 0) {
+          ready = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
-      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    if (!ready) {
+    if (!setupFailed && !ready) {
       const log = await run("docker", ["exec", containerName, "cat", "/tmp/server.log"], 2000);
       stderr += `Сервер приложения не поднялся вовремя.\n${log.stdout}\n`;
-    } else {
+    } else if (ready) {
       for (const reqSpec of input.requests) {
         const curlArgs = [
           "exec",

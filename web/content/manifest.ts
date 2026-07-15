@@ -214,6 +214,68 @@ export const manifest: BlockManifestEntry[] = [
       practiceExerciseId: "bookshelf-catalog",
     },
   },
+  {
+    slug: "doctrine",
+    title: "Блок 3. Doctrine ORM",
+    description:
+      "От PHP-массива к настоящей базе данных: Entity и маппинг, EntityManager, QueryBuilder и связи между сущностями. BookShelf наконец получает реальную персистентность — созданная книга переживает границу HTTP-запроса.",
+    lessons: [
+      {
+        slug: "entity-basics",
+        title: "Entity: маппинг класса на таблицу",
+        estimatedMinutes: 12,
+      },
+      {
+        slug: "entity-manager",
+        title: "EntityManager: persist, flush, find",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "query-builder",
+        title: "QueryBuilder и репозитории",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "relations",
+        title: "Связи между сущностями: ManyToOne",
+        estimatedMinutes: 10,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 3: JSON API на настоящей базе данных",
+      description:
+        "Тот же контракт API, что и в Блоке 1 (список, книга по id, создание) — но PHP-массив заменяется на настоящую SQLite-базу через Doctrine. Entity Book/Author и сидинг трёх книг уже готовы — фокус на контроллере.",
+      note: "Проверяется полностью автоматически прямо в браузере — 10 проверок, включая ту самую, ради которой всё затевалось: книга, созданная через POST, действительно появляется в следующем GET-списке.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "Entity Book и Author, а также сидинг трёх книг (1984, Clean Code, Dune) уже зашиты в песочницу — тебе нужно написать только контроллер поверх них, как в мини-проекте Блока 1.",
+        },
+        {
+          id: "implement-read",
+          title: "Реализуй чтение через репозиторий",
+          description:
+            "findAll() для списка, find($id) для одной книги — плюс честный 404, если книги с таким id нет.",
+        },
+        {
+          id: "implement-write",
+          title: "Реализуй создание с поиском/созданием автора",
+          description:
+            "Сначала проверь обязательные поля (400 при их отсутствии), затем найди автора по имени или создай нового — и только потом создавай книгу.",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все проверки",
+          description:
+            "Нажми «Запустить» и обрати внимание на последнюю проверку — список книг запрашивается ещё раз ПОСЛЕ создания новой, чтобы убедиться, что она реально сохранилась.",
+          expectedResult: "Все 10 проверок зелёные, включая появление новой книги в повторном списке.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-doctrine",
+    },
+  },
 ];
 
 export function getBlock(blockSlug: string): BlockManifestEntry | undefined {

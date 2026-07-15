@@ -14,7 +14,9 @@ export interface HttpRequestSpec {
 
 export type HttpCheck =
   | { type: "http-status"; requestId: string; expectedStatus: number; description: string }
-  | { type: "http-body-contains"; requestId: string; value: string; description: string };
+  | { type: "http-body-contains"; requestId: string; value: string; description: string }
+  | { type: "http-body-not-contains"; requestId: string; value: string; description: string }
+  | { type: "http-body-matches"; requestId: string; pattern: string; flags?: string; description: string };
 
 interface ExerciseBase {
   id: string;
@@ -33,6 +35,8 @@ export type Exercise =
       targetPath: string;
       requests: HttpRequestSpec[];
       checks: HttpCheck[];
+      /** Консольные команды (например, doctrine:schema:create), выполняются до старта сервера. */
+      setupCommands?: string[];
     });
 
 interface QuizQuestionBase {

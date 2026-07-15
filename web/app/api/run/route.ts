@@ -40,6 +40,13 @@ function evaluateHttpCheck(
       return { description: check.description, passed: result.status === check.expectedStatus };
     case "http-body-contains":
       return { description: check.description, passed: result.body.includes(check.value) };
+    case "http-body-not-contains":
+      return { description: check.description, passed: !result.body.includes(check.value) };
+    case "http-body-matches":
+      return {
+        description: check.description,
+        passed: new RegExp(check.pattern, check.flags).test(result.body),
+      };
   }
 }
 
@@ -105,8 +112,9 @@ export async function POST(request: Request) {
         code: parsed.data.code,
         targetPath: exercise.targetPath,
         requests: exercise.requests,
+        setupCommands: exercise.setupCommands,
       },
-      30_000
+      35_000
     );
   } catch {
     return NextResponse.json(

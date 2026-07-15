@@ -10,6 +10,10 @@ import { twigBasicsQuiz } from "./twig-basics";
 import { controlStructuresQuiz } from "./control-structures";
 import { templateInheritanceQuiz } from "./template-inheritance";
 import { linksAndAssetsQuiz } from "./links-and-assets";
+import { entityBasicsQuiz } from "./entity-basics";
+import { entityManagerQuiz } from "./entity-manager";
+import { queryBuilderQuiz } from "./query-builder";
+import { relationsQuiz } from "./relations";
 
 export const quizzes: Record<string, Quiz> = {
   [whatIsSymfonyQuiz.id]: whatIsSymfonyQuiz,
@@ -23,6 +27,10 @@ export const quizzes: Record<string, Quiz> = {
   [controlStructuresQuiz.id]: controlStructuresQuiz,
   [templateInheritanceQuiz.id]: templateInheritanceQuiz,
   [linksAndAssetsQuiz.id]: linksAndAssetsQuiz,
+  [entityBasicsQuiz.id]: entityBasicsQuiz,
+  [entityManagerQuiz.id]: entityManagerQuiz,
+  [queryBuilderQuiz.id]: queryBuilderQuiz,
+  [relationsQuiz.id]: relationsQuiz,
 };
 
 export function getQuiz(id: string): Quiz | undefined {

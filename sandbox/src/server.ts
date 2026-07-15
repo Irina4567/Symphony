@@ -28,6 +28,7 @@ const runRequestSchema = z.discriminatedUnion("mode", [
     code: z.string().min(1).max(MAX_CODE_LENGTH),
     targetPath: z.string().min(1).max(200),
     requests: z.array(httpRequestSchema).min(1).max(10),
+    setupCommands: z.array(z.string().min(1).max(300)).max(5).optional(),
   }),
 ]);
 
@@ -56,6 +57,7 @@ app.post("/run", async (req, res) => {
         code: parsed.data.code,
         targetPath: parsed.data.targetPath,
         requests: parsed.data.requests,
+        setupCommands: parsed.data.setupCommands,
       });
       res.json(result);
     }

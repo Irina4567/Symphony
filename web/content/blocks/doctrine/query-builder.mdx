@@ -1,0 +1,73 @@
+`find()` и `findBy()` покрывают простые случаи. Как только условие поиска усложняется — на
+сцену выходит **QueryBuilder**.
+
+## Собственный метод репозитория
+
+Каждая сущность автоматически получает базовый репозиторий, но для нетривиальных запросов его
+расширяют собственным классом:
+
+```php
+namespace App\Repository;
+
+use App\Entity\Book;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+class BookRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Book::class);
+    }
+
+    public function findPublishedAfter(int $year): array
+    {
+        return $this->createQueryBuilder('b')
+            ->where('b.year > :year')
+            ->setParameter('year', $year)
+            ->orderBy('b.year', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+}
+```
+
+`'b'` в `createQueryBuilder('b')` — алиас таблицы (как `AS b` в SQL), дальше на него ссылаются
+через `b.year`, `b.title` и так далее.
+
+## Почему не сырой SQL
+
+```php
+// Так делать не стоит:
+$sql = "SELECT * FROM book WHERE year > " . $year;
+```
+
+Если `$year` придёт от пользователя без проверки — это классическая SQL-инъекция. QueryBuilder с
+`setParameter()` строит **подготовленный запрос**: значение никогда не становится частью текста
+SQL напрямую, а передаётся отдельно и безопасно биндится драйвером базы данных.
+
+## DQL — SQL-подобный язык прямо для сущностей
+
+QueryBuilder — это удобный способ *построить* запрос, но под капотом он генерирует DQL (Doctrine
+Query Language) — язык запросов, похожий на SQL, но оперирующий классами и свойствами вместо
+таблиц и столбцов:
+
+```php
+$query = $em->createQuery(
+    'SELECT b FROM App\Entity\Book b WHERE b.year > :year ORDER BY b.year ASC'
+);
+$query->setParameter('year', $year);
+$books = $query->getResult();
+```
+
+Оба подхода эквивалентны — QueryBuilder просто удобнее компоновать программно (добавлять условия
+по одному, в зависимости от входных фильтров), а DQL нагляднее читать целиком.
+
+## Где размещать такие методы
+
+Логика поиска — часть репозитория, а не контроллера. Если завтра запрос понадобится в другом
+контроллере или в консольной команде — метод уже готов, переиспользуется без копипасты.
+
+<CodeExercise exerciseId="doctrine-query" />
+
+<Quiz quizId="query-builder" />
