@@ -23,6 +23,8 @@ class BookService
 сам создаст объект `BookService` и передаст его вам. Никакой ручной сборки `new BookService()` в
 контроллерах писать не придётся.
 
+![Dependency Injection на пальцах: Symfony сам достаёт нужный сервис и передаёт его в контроллер](/images/intro/dependency-injection.png)
+
 ## Namespace и автозагрузка через Composer
 
 Файл `App\Service\BookService` физически лежит в `src/Service/BookService.php`. Это не совпадение:
@@ -41,6 +43,8 @@ Symfony-проект настроен на **PSR-4 автозагрузку** ч
 Это значит: неймспейс `App\` соответствует каталогу `src/`, а дальше — один в один. Класс
 `App\Service\BookService` обязан лежать в `src/Service/BookService.php`. Благодаря этому правилу
 Composer генерирует автозагрузчик, и вам никогда не приходится писать `require` вручную.
+
+![Namespace = путь к файлу: App\Service\BookService соответствует src/Service/BookService.php](/images/intro/namespace-psr4.png)
 
 ## Практика
 

@@ -22,6 +22,14 @@ import { userEntityQuiz } from "./user-entity";
 import { authenticationQuiz } from "./authentication";
 import { authorizationRolesQuiz } from "./authorization-roles";
 import { votersQuiz } from "./voters";
+import { containerAndAutowiringQuiz } from "./container-and-autowiring";
+import { interfacesQuiz } from "./interfaces";
+import { explicitBindingQuiz } from "./explicit-binding";
+import { taggedServicesQuiz } from "./tagged-services";
+import { dispatchBasicsQuiz } from "./dispatch-basics";
+import { customEventQuiz } from "./custom-event";
+import { listenersQuiz } from "./listeners";
+import { prioritiesQuiz } from "./priorities";
 
 export const quizzes: Record<string, Quiz> = {
   [whatIsSymfonyQuiz.id]: whatIsSymfonyQuiz,
@@ -47,6 +55,14 @@ export const quizzes: Record<string, Quiz> = {
   [authenticationQuiz.id]: authenticationQuiz,
   [authorizationRolesQuiz.id]: authorizationRolesQuiz,
   [votersQuiz.id]: votersQuiz,
+  [containerAndAutowiringQuiz.id]: containerAndAutowiringQuiz,
+  [interfacesQuiz.id]: interfacesQuiz,
+  [explicitBindingQuiz.id]: explicitBindingQuiz,
+  [taggedServicesQuiz.id]: taggedServicesQuiz,
+  [dispatchBasicsQuiz.id]: dispatchBasicsQuiz,
+  [customEventQuiz.id]: customEventQuiz,
+  [listenersQuiz.id]: listenersQuiz,
+  [prioritiesQuiz.id]: prioritiesQuiz,
 };
 
 export function getQuiz(id: string): Quiz | undefined {

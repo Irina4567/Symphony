@@ -30,6 +30,8 @@ composer create-project symfony/skeleton my_project
 composer create-project symfony/webapp-skeleton my_project
 ```
 
+![Два способа создать проект: Symfony CLI или Composer — результат одинаковый](/images/intro/two-ways-to-create-project.png)
+
 ## Structure проекта
 
 После создания проект выглядит примерно так:
@@ -45,9 +47,13 @@ composer create-project symfony/webapp-skeleton my_project
 | `var/`            | Генерируемые данные: `var/cache`, `var/log` — можно смело удалять, всё пересоберётся |
 | `vendor/`         | Зависимости, поставленные Composer — сюда никогда не коммитят и не редактируют вручную |
 
+![Структура каталогов проекта: bin, config, public, src, templates, var, vendor](/images/intro/project-structure.png)
+
 Обратите внимание: **только `public/`** должен быть document root веб-сервера. Если открыть
 из браузера `src/` или `config/` напрямую — это будет дыра в безопасности; поэтому все остальные
 каталоги физически лежат вне зоны, которую отдаёт веб-сервер.
+
+![public/index.php — единственная дверь наружу, всё остальное недоступно из браузера](/images/intro/public-dir-only-door.png)
 
 ## Symfony Flex
 

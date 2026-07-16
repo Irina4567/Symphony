@@ -1,0 +1,77 @@
+Прошлый урок внедрял конкретный класс — `BookFormatterService`. Но что если завтра появится
+другой способ форматировать книги, а старый код менять не хочется? Правильный ответ в DI — зависеть
+не от конкретной реализации, а от **контракта**: интерфейса.
+
+## Интерфейс как контракт
+
+```php
+namespace App\Service;
+
+use App\Entity\Book;
+
+interface RecommendationStrategyInterface
+{
+    public function name(): string;
+
+    /** @param Book[] $books */
+    public function recommend(array $books): ?Book;
+}
+```
+
+```php
+namespace App\Service;
+
+use App\Entity\Book;
+
+class RandomBookStrategy implements RecommendationStrategyInterface
+{
+    public function name(): string
+    {
+        return 'random';
+    }
+
+    public function recommend(array $books): ?Book
+    {
+        if ($books === []) {
+            return null;
+        }
+
+        return $books[array_rand($books)];
+    }
+}
+```
+
+Пока в приложении есть **ровно одна** реализация `RecommendationStrategyInterface`, можно
+типизировать параметр самим интерфейсом:
+
+```php
+public function __invoke(EntityManagerInterface $em, RecommendationStrategyInterface $strategy): JsonResponse
+{
+    $books = $em->getRepository(Book::class)->findAll();
+    $book = $strategy->recommend($books);
+    // ...
+}
+```
+
+## Как это работает под капотом
+
+Когда автоконфигурация видит, что во всём контейнере есть только один сервис, реализующий
+конкретный интерфейс, она автоматически создаёт для этого интерфейса **алиас** — что-то вроде
+"если кто-то просит `RecommendationStrategyInterface`, дай ему `RandomBookStrategy`". Это делает
+код контроллера полностью независимым от того, ЧТО именно реализует стратегию — только от того,
+ЧТО она умеет.
+
+## Зачем это нужно, если реализация всё равно одна
+
+На первый взгляд кажется, что раз реализация одна, разницы между интерфейсом и классом нет. Но:
+
+- **Тесты.** В unit-тесте можно подменить реальную стратегию на тестовый дублёр (test double),
+  реализующий тот же интерфейс, — контроллер не заметит подмены.
+- **Замена реализации без изменения потребителей.** Если завтра `RandomBookStrategy` заменится на
+  что-то другое, весь код, зависящий от интерфейса, не придётся трогать вообще.
+- **Расширяемость.** В следующих двух уроках реализаций станет несколько — и код, уже
+  завязанный на интерфейс, а не на класс, не потребует переписывания.
+
+<CodeExercise exerciseId="recommendation-controller" />
+
+<Quiz quizId="interfaces" />

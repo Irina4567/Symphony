@@ -31,6 +31,9 @@ COPY --chown=runner:runner fixtures/src/Repository/ /skeleton/src/Repository/
 COPY --chown=runner:runner fixtures/src/Command/ /skeleton/src/Command/
 COPY --chown=runner:runner fixtures/src/Form/ /skeleton/src/Form/
 COPY --chown=runner:runner fixtures/src/Security/ /skeleton/src/Security/
+COPY --chown=runner:runner fixtures/src/Service/ /skeleton/src/Service/
+COPY --chown=runner:runner fixtures/src/Event/ /skeleton/src/Event/
+COPY --chown=runner:runner fixtures/src/EventListener/ /skeleton/src/EventListener/
 COPY --chown=runner:runner fixtures/templates/ /skeleton/templates/
 COPY --chown=runner:runner fixtures/env.local /skeleton/.env.local
 # Минимальный security.yaml (только хешер паролей, фаервол выключен) — состояние, которое

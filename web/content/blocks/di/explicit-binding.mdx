@@ -1,0 +1,63 @@
+В прошлом уроке автовайринг сам нашёл единственную реализацию интерфейса. Теперь в приложении
+появилась вторая стратегия — `LatestYearBookStrategy`, рекомендующая книгу с максимальным годом
+издания. Если попробовать запустить прошлый код без изменений, Symfony честно откажется гадать:
+
+```
+Cannot autowire argument $strategy of "App\Controller\RecommendController::__invoke()":
+it references interface "App\Service\RecommendationStrategyInterface" but no such service
+exists. You should maybe alias this interface to one of these existing services:
+"App\Service\LatestYearBookStrategy", "App\Service\RandomBookStrategy".
+```
+
+Это не баг и не редкий edge case — это ожидаемое поведение при появлении второй реализации.
+Сообщение об ошибке даже подсказывает решение: явно указать, какую реализацию использовать.
+
+## #[Autowire(service: ...)] — атрибут на параметре
+
+```php
+public function __invoke(
+    EntityManagerInterface $em,
+    #[Autowire(service: LatestYearBookStrategy::class)] RecommendationStrategyInterface $strategy
+): JsonResponse {
+    // $strategy — точно LatestYearBookStrategy, никакой неоднозначности
+}
+```
+
+Атрибут стоит прямо перед типизированным параметром и указывает контейнеру: для этого конкретного
+места не пытайся выбирать автоматически — подставь именно этот сервис. Тип параметра
+(`RecommendationStrategyInterface`) при этом не меняется — код по-прежнему работает с контрактом,
+просто теперь явно известно, какая реализация за ним стоит именно здесь.
+
+## `#[Autowire]` умеет больше, чем просто `service`
+
+Тот же атрибут используется и для других видов "точечного" внедрения — значений, а не только
+сервисов:
+
+```php
+public function __construct(
+    #[Autowire('%kernel.project_dir%/var/exports')] private string $exportDir,
+    #[Autowire(env: 'MAILER_DSN')] private string $mailerDsn,
+) {}
+```
+
+`service` — не единственный именованный аргумент атрибута: есть ещё `env` (переменная окружения),
+`param` (параметр контейнера) и `value` (произвольное выражение вроде `%kernel.project_dir%`).
+Общий принцип один: там, где автовайринг не может (или не должен) угадывать сам, `#[Autowire]`
+даёт точный, явный ответ прямо в месте использования.
+
+## Альтернатива: настройка в services.yaml
+
+То же самое можно сделать декларативно, в конфиге, а не в PHP-коде:
+
+```yaml
+services:
+    App\Service\RecommendationStrategyInterface $latestStrategy: '@App\Service\LatestYearBookStrategy'
+```
+
+Выбор между атрибутом в коде и записью в `services.yaml` — вопрос стиля команды (совсем как выбор
+между `#[IsGranted]` и `access_control` в Блоке 5): атрибут нагляднее прямо в месте использования,
+конфиг — удобнее, когда таких связок много и хочется видеть их все в одном файле.
+
+<CodeExercise exerciseId="explicit-recommendation-controller" />
+
+<Quiz quizId="explicit-binding" />

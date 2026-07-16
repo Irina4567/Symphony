@@ -403,6 +403,125 @@ export const manifest: BlockManifestEntry[] = [
       practiceExerciseId: "bookshelf-secure",
     },
   },
+  {
+    slug: "di",
+    title: "Блок 6. Dependency Injection вглубь",
+    description:
+      "Контейнер служб и автовайринг, зависимость от интерфейса вместо класса, явное связывание при нескольких реализациях, теги для сбора всех реализаций сразу. BookShelf получает сервис рекомендаций книг — с несколькими взаимозаменяемыми стратегиями.",
+    lessons: [
+      {
+        slug: "container-and-autowiring",
+        title: "Контейнер и автовайринг",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "interfaces",
+        title: "Интерфейсы: автовайринг при одной реализации",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "explicit-binding",
+        title: "Явное связывание нескольких реализаций",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "tagged-services",
+        title: "Теги: собери все реализации сразу",
+        estimatedMinutes: 10,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 6: сервис рекомендаций книг",
+      description:
+        "Собери маршрут, который выбирает стратегию рекомендации по имени из query-параметра среди всех зарегистрированных реализаций и возвращает рекомендованную книгу. Сами стратегии (random, latest-year) уже готовы — фокус на связке #[AutowireIterator] + выбор по имени.",
+      note: "Проверяется полностью автоматически прямо в браузере — 5 проверок: обе стратегии возвращают книгу, а неизвестное имя стратегии — понятную ошибку 400 со списком доступных вариантов.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "RecommendationStrategyInterface (уже с тегом) и обе стратегии — random и latest-year — зашиты в песочницу. Тебе нужно написать только контроллер, который их использует.",
+        },
+        {
+          id: "collect-strategies",
+          title: "Собери все стратегии через тег",
+          description: "Тот же #[AutowireIterator('app.recommendation_strategy')], что и в прошлом уроке — только теперь в контроллере, а не в отдельном демо-маршруте.",
+        },
+        {
+          id: "match-by-name",
+          title: "Найди нужную стратегию по имени из query-параметра",
+          description:
+            "Пройдись по коллекции, сравнивая ->name() с значением ?strategy=. Если совпадения нет — сразу верни 400 со списком доступных имён, не пытаясь рекомендовать книгу.",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все проверки",
+          description: "Нажми «Запустить» и добейся, чтобы все 5 проверок стали зелёными.",
+          expectedResult: "Все 5 проверок зелёные.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-recommend",
+    },
+  },
+  {
+    slug: "event-dispatcher",
+    title: "Блок 7. EventDispatcher",
+    description:
+      "Паттерн publish/subscribe: публикация событий, собственные классы событий, слушатели через #[AsEventListener], приоритеты при нескольких подписчиках. BookShelf публикует событие при создании книги — с уведомлением и аудит-логом, не завязанными на сам контроллер.",
+    lessons: [
+      {
+        slug: "dispatch-basics",
+        title: "Диспетчер событий: dispatch()",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "custom-event",
+        title: "Своё событие: BookCreatedEvent",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "listeners",
+        title: "Подписчики: #[AsEventListener]",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "priorities",
+        title: "Приоритеты и несколько подписчиков",
+        estimatedMinutes: 10,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 7: событие при создании книги",
+      description:
+        "Собери маршрут создания книги, который сохраняет её в базу и публикует BookCreatedEvent сразу после сохранения. Событие и оба слушателя (уведомление и аудит-лог) уже готовы — фокус на контроллере, публикующем событие в правильный момент.",
+      note: "Проверяется полностью автоматически прямо в браузере — 4 проверки, включая подтверждение, что оба независимых слушателя действительно сработали при создании книги.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "BookCreatedEvent, BookCreatedNotifier и AuditLogListener уже написаны и работают (это ровно то, что ты писал в предыдущих уроках) — тебе нужно написать только контроллер.",
+        },
+        {
+          id: "persist-first",
+          title: "Сначала сохрани книгу",
+          description: "persist() + flush() до создания события — книге нужен id из базы, а событие должно описывать уже случившийся факт, а не запрос на его создание.",
+        },
+        {
+          id: "dispatch-event",
+          title: "Опубликуй BookCreatedEvent",
+          description: "Создай событие с только что сохранённой книгой и опубликуй через EventDispatcherInterface — оба слушателя сработают сами.",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все проверки",
+          description: "Нажми «Запустить» и добейся, чтобы все 4 проверки стали зелёными.",
+          expectedResult: "Все 4 проверки зелёные.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-notify",
+    },
+  },
 ];
 
 export function getBlock(blockSlug: string): BlockManifestEntry | undefined {

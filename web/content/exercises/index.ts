@@ -26,6 +26,16 @@ import { apiLoginAuthenticatorExercise } from "./api-login-authenticator";
 import { rolesControllerExercise } from "./roles-controller";
 import { bookVoterExercise } from "./book-voter";
 import { bookshelfSecureExercise } from "./bookshelf-secure";
+import { formatterControllerExercise } from "./formatter-controller";
+import { recommendationControllerExercise } from "./recommendation-controller";
+import { explicitRecommendationControllerExercise } from "./explicit-recommendation-controller";
+import { allRecommendationsControllerExercise } from "./all-recommendations-controller";
+import { bookshelfRecommendExercise } from "./bookshelf-recommend";
+import { pingEventControllerExercise } from "./ping-event-controller";
+import { bookCreatedEventExercise } from "./book-created-event";
+import { bookCreatedNotifierExercise } from "./book-created-notifier";
+import { priorityNotifierExercise } from "./priority-notifier";
+import { bookshelfNotifyExercise } from "./bookshelf-notify";
 
 export const exercises: Record<string, Exercise> = {
   [oopWarmupExercise.id]: oopWarmupExercise,
@@ -55,6 +65,16 @@ export const exercises: Record<string, Exercise> = {
   [rolesControllerExercise.id]: rolesControllerExercise,
   [bookVoterExercise.id]: bookVoterExercise,
   [bookshelfSecureExercise.id]: bookshelfSecureExercise,
+  [formatterControllerExercise.id]: formatterControllerExercise,
+  [recommendationControllerExercise.id]: recommendationControllerExercise,
+  [explicitRecommendationControllerExercise.id]: explicitRecommendationControllerExercise,
+  [allRecommendationsControllerExercise.id]: allRecommendationsControllerExercise,
+  [bookshelfRecommendExercise.id]: bookshelfRecommendExercise,
+  [pingEventControllerExercise.id]: pingEventControllerExercise,
+  [bookCreatedEventExercise.id]: bookCreatedEventExercise,
+  [bookCreatedNotifierExercise.id]: bookCreatedNotifierExercise,
+  [priorityNotifierExercise.id]: priorityNotifierExercise,
+  [bookshelfNotifyExercise.id]: bookshelfNotifyExercise,
 };
 
 export function getExercise(id: string): Exercise | undefined {
