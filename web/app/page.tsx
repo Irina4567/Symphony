@@ -5,7 +5,6 @@ import { BlockCard } from "@/components/block-card";
 import { Button } from "@/components/ui/button";
 
 const upcoming = [
-  { title: "Security", contribution: "Вход пользователей, права на создание и редактирование книг" },
   { title: "Dependency Injection вглубь", contribution: "Сервис рекомендаций книг, интерфейсы, автовайринг" },
   { title: "EventDispatcher", contribution: "Событие при добавлении книги и подписчик на него" },
   { title: "Тестирование", contribution: "PHPUnit и Symfony test client на API BookShelf" },

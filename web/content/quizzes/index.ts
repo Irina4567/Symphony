@@ -18,6 +18,10 @@ import { formBasicsQuiz } from "./form-basics";
 import { validationQuiz } from "./validation";
 import { formHandlingQuiz } from "./form-handling";
 import { flashAndRedirectQuiz } from "./flash-and-redirect";
+import { userEntityQuiz } from "./user-entity";
+import { authenticationQuiz } from "./authentication";
+import { authorizationRolesQuiz } from "./authorization-roles";
+import { votersQuiz } from "./voters";
 
 export const quizzes: Record<string, Quiz> = {
   [whatIsSymfonyQuiz.id]: whatIsSymfonyQuiz,
@@ -39,6 +43,10 @@ export const quizzes: Record<string, Quiz> = {
   [validationQuiz.id]: validationQuiz,
   [formHandlingQuiz.id]: formHandlingQuiz,
   [flashAndRedirectQuiz.id]: flashAndRedirectQuiz,
+  [userEntityQuiz.id]: userEntityQuiz,
+  [authenticationQuiz.id]: authenticationQuiz,
+  [authorizationRolesQuiz.id]: authorizationRolesQuiz,
+  [votersQuiz.id]: votersQuiz,
 };
 
 export function getQuiz(id: string): Quiz | undefined {

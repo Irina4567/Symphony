@@ -1,0 +1,7 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    firewalls:
+        main:
+            security: false

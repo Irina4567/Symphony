@@ -1,0 +1,66 @@
+Роли из прошлого урока отвечают на грубый вопрос: «есть ли у пользователя такая-то роль вообще».
+Но что если правило звучит иначе: «редактировать книгу может тот, кто её добавил — и никто
+другой, включая других обычных пользователей»? Роль тут не поможет — у всех авторизованных
+пользователей одна и та же роль `ROLE_USER`. Нужна проверка на уровне конкретного объекта — для
+этого в Symfony есть **Voter**.
+
+## Voter: проверка не по роли, а по объекту
+
+```php
+class BookVoter extends Voter
+{
+    public const EDIT = 'EDIT';
+
+    protected function supports(string $attribute, mixed $subject): bool
+    {
+        return $attribute === self::EDIT && $subject instanceof Book;
+    }
+
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
+    {
+        $user = $token->getUser();
+        if (!$user instanceof UserInterface) {
+            return false;
+        }
+
+        /** @var Book $book */
+        $book = $subject;
+
+        return $book->getOwner()?->getUserIdentifier() === $user->getUserIdentifier();
+    }
+}
+```
+
+- **`supports()`** — «участвую ли я вообще в проверке этого атрибута на этом объекте?». Здесь —
+  только для строки `'EDIT'` и только когда объект — это `Book`. Если `false` — Symfony спросит
+  других Voter'ов (в приложении их может быть несколько).
+- **`voteOnAttribute()`** — сама логика решения: `true` (доступ есть) или `false` (доступа нет).
+  Получает и токен (кто спрашивает), и сам объект (`$subject`) — именно поэтому Voter может
+  сравнивать «этого пользователя» с «владельцем именно этой записи».
+
+Регистрировать Voter в конфиге вручную не нужно: Symfony автоматически находит все классы,
+наследующие `Voter`, благодаря `autoconfigure: true` (включено по умолчанию в
+`config/services.yaml` любого нового проекта).
+
+## Как это вызывается
+
+```php
+$this->isGranted('EDIT', $book);              // true/false, не бросает исключение
+$this->denyAccessUnlessGranted('EDIT', $book); // бросает AccessDeniedException, если false
+```
+
+Второй аргумент — **subject**, тот самый конкретный объект, на который нужно проверить право.
+Без него (как в прошлом уроке — `isGranted('ROLE_USER')`) проверка была бы только по роли, без
+привязки к конкретной записи.
+
+## Роли и Voter — не взаимоисключающие механизмы
+
+На практике оба подхода часто комбинируют: сначала грубая проверка по роли («ты вообще
+залогинен?» — `#[IsGranted('ROLE_USER')]`), а внутри метода — тонкая проверка по объекту
+(«именно эта запись — твоя?» — `denyAccessUnlessGranted('EDIT', $entity)`). Собственно, так
+устроен мини-проект этого блока: создавать книги может любой вошедший пользователь, а
+редактировать — только тот, кто её создал.
+
+<CodeExercise exerciseId="book-voter" />
+
+<Quiz quizId="voters" />

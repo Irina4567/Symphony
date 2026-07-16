@@ -1,0 +1,99 @@
+Пользователь с хэшированным паролем в базе — только половина дела. Теперь нужен механизм,
+который на каждый запрос с email/паролем проверяет: это точно наш пользователь? В Symfony за это
+отвечает связка **Authenticator** + **Provider** + **Firewall**.
+
+## Provider: где искать пользователя
+
+```yaml
+security:
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+```
+
+Провайдер типа `entity` умеет доставать пользователя из базы по указанному свойству — здесь по
+`email`. Дальше Symfony сверит присланный пароль с хэшем этого пользователя автоматически, тем же
+хэшером, что настроен в `password_hashers`.
+
+## Authenticator: как именно проверять запрос
+
+`AbstractAuthenticator` — это класс с четырьмя методами, которые описывают весь цикл входа:
+
+```php
+class ApiLoginAuthenticator extends AbstractAuthenticator
+{
+    public function supports(Request $request): ?bool
+    {
+        return $request->getPathInfo() === '/login' && $request->isMethod('POST');
+    }
+
+    public function authenticate(Request $request): Passport
+    {
+        $data = json_decode($request->getContent(), true);
+
+        return new Passport(
+            new UserBadge($data['email'] ?? ''),
+            new PasswordCredentials($data['password'] ?? '')
+        );
+    }
+
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    {
+        return new JsonResponse(['ok' => true]);
+    }
+
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    {
+        return new JsonResponse(['ok' => false, 'error' => 'Invalid credentials'], 401);
+    }
+}
+```
+
+- **`supports()`** — «этот запрос вообще моё дело?». Если `false`/`null` — Authenticator даже не
+  вызывается, запрос идёт дальше как обычно.
+- **`authenticate()`** — собирает **Passport**: связку «кого ищем» (`UserBadge`, по значению из
+  `provider`) и «чем подтверждаем личность» (`PasswordCredentials` — открытый пароль, который
+  Symfony сама сверит с хэшем через провайдер и хэшер).
+- **`onAuthenticationSuccess()`/`onAuthenticationFailure()`** — что вернуть клиенту в каждом
+  случае. Здесь можно отдать JSON, редирект, что угодно — Authenticator сам решает, а не
+  фреймворк за него.
+
+## Подключение в security.yaml
+
+```yaml
+security:
+    firewalls:
+        main:
+            lazy: true
+            provider: app_user_provider
+            custom_authenticators:
+                - App\Security\ApiLoginAuthenticator
+```
+
+`lazy: true` означает, что Symfony не будет пытаться аутентифицировать пользователя, пока код
+явно не спросит «а кто сейчас залогинен» (например, через `access_control` или `$this->getUser()`)
+— так публичные маршруты не тратят время на проверку сессии зря.
+
+## Важная деталь: у /login должен быть настоящий маршрут
+
+Firewall перехватывает запрос и спрашивает своих аутентификаторов «кто-нибудь поддерживает этот
+запрос?» только если для этого запроса в принципе нашёлся подходящий маршрут в роутинге. Если
+`/login` нигде не объявлен как `#[Route]`, роутинг ответит 404 раньше, чем до Authenticator вообще
+дойдёт очередь — и `supports()` никогда не вызовется, что бы в нём ни было написано.
+
+Поэтому в проекте есть `LoginController` с маршрутом на `/login` — его тело в норме никогда не
+выполняется (Authenticator перехватывает запрос раньше), это просто "заглушка-подстраховка",
+чтобы у маршрута было на что сработать.
+
+## Сессия между запросами
+
+После успешного `onAuthenticationSuccess()` Symfony сохраняет информацию о вошедшем пользователе
+в сессию — точно так же, как это происходило с flash-сообщениями в Блоке 4. Следующий запрос с
+тем же cookie сессии уже "знает", кто вошёл — это и проверяет упражнение ниже: логин, а затем
+отдельный запрос `/whoami`, подтверждающий, что сессия сохранилась.
+
+<CodeExercise exerciseId="api-login-authenticator" />
+
+<Quiz quizId="authentication" />

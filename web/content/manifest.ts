@@ -336,6 +336,73 @@ export const manifest: BlockManifestEntry[] = [
       practiceExerciseId: "bookshelf-form",
     },
   },
+  {
+    slug: "security",
+    title: "Блок 5. Security: аутентификация и авторизация",
+    description:
+      "Кто ты и что тебе разрешено: Entity-пользователь и хэширование паролей, кастомный Authenticator, роли и access_control, Voter для проверок на уровне конкретного объекта. BookShelf получает вход по паролю и правило «редактировать может только тот, кто добавил книгу».",
+    lessons: [
+      {
+        slug: "user-entity",
+        title: "Пользователь: Entity и хэширование паролей",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "authentication",
+        title: "Аутентификация: кастомный Authenticator",
+        estimatedMinutes: 12,
+      },
+      {
+        slug: "authorization-roles",
+        title: "Авторизация: роли и access_control",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "voters",
+        title: "Voters: авторизация на уровне объекта",
+        estimatedMinutes: 10,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 5: защити каталог",
+      description:
+        "Собери три действия: публичный список книг, создание книги вошедшим пользователем (создатель становится владельцем) и редактирование, доступное только владельцу конкретной книги. Login, Authenticator и Voter уже готовы и зашиты в песочницу — фокус на контроллере.",
+      note: "Проверяется полностью автоматически прямо в браузере — 7 проверок, включая полный жизненный цикл: анонимная попытка создать книгу отклоняется, вошедший пользователь создаёт книгу и редактирует свою, но не может отредактировать чужую.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "User, ApiLoginAuthenticator и BookVoter уже зашиты в песочницу и работают — тебе нужно написать только контроллер с тремя действиями, как в предыдущих мини-проектах.",
+        },
+        {
+          id: "implement-index",
+          title: "Реализуй index",
+          description: "Список всех книг в JSON, включая email владельца каждой — этот маршрут публичный, вход не нужен.",
+        },
+        {
+          id: "implement-create",
+          title: "Реализуй create с проверкой роли",
+          description:
+            "Защити маршрут через #[IsGranted('ROLE_USER')] и сделай текущего пользователя ($this->getUser()) владельцем новой книги.",
+        },
+        {
+          id: "implement-update",
+          title: "Реализуй update с проверкой через Voter",
+          description:
+            "Сначала найди книгу (404, если её нет), потом denyAccessUnlessGranted('EDIT', $book) — и только потом меняй данные.",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все проверки",
+          description:
+            "Нажми «Запустить» и обрати внимание на последовательность: один и тот же маршрут PATCH сначала отвечает 200 (владельцу), затем 403 (постороннему), хотя код один и тот же — решает именно Voter.",
+          expectedResult: "Все 7 проверок зелёные.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-secure",
+    },
+  },
 ];
 
 export function getBlock(blockSlug: string): BlockManifestEntry | undefined {

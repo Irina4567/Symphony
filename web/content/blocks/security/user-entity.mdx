@@ -1,0 +1,103 @@
+До сих пор в BookShelf не было понятия «пользователь» — каталог был публичным и одинаковым для
+всех. В этом блоке добавляем аутентификацию и авторизацию: сначала научимся хранить
+пользователей и их пароли безопасно, а дальше — проверять, кто есть кто, и что кому разрешено.
+
+## User — тоже просто Entity
+
+В Symfony пользователь — не какой-то особый магический класс, а обычная Doctrine Entity, как
+`Book` или `Author` из прошлого блока. Единственное отличие — она должна реализовывать два
+интерфейса, которые понимает компонент Security:
+
+```php
+namespace App\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+#[ORM\Entity]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
+{
+    #[ORM\Column(length: 180, unique: true)]
+    private string $email = '';
+
+    #[ORM\Column]
+    private string $password = '';
+
+    #[ORM\Column]
+    private array $roles = [];
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email; // по этому значению пользователя ищут при логине
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER'; // у каждого залогиненного пользователя есть эта роль всегда
+        return array_unique($roles);
+    }
+
+    public function eraseCredentials(): void
+    {
+        // сюда кладут очистку временных чувствительных данных (не пароля из БД) после логина
+    }
+
+    // getPassword()/setPassword(), getEmail()/setEmail() — обычные геттеры/сеттеры
+}
+```
+
+- **`UserInterface`** — базовый контракт: `getUserIdentifier()` (уникальный логин, у нас — email)
+  и `getRoles()` (список ролей, о них — в уроке про авторизацию).
+- **`PasswordAuthenticatedUserInterface`** — добавляет `getPassword()`, чтобы компонент Security
+  знал, где искать хэш пароля для сверки.
+
+## Пароли: никогда не храни их в открытом виде
+
+Хранить `password: "secret123"` в базе — грубая ошибка безопасности: любая утечка базы данных
+= утечка всех паролей сразу, а многие пользователи переиспользуют пароли между сайтами. Вместо
+этого хранится **хэш** — результат необратимого преобразования, из которого нельзя восстановить
+исходный пароль, но можно проверить, что «этот пароль при хэшировании даёт именно этот хэш».
+
+Настройка алгоритма — в `config/packages/security.yaml`:
+
+```yaml
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+```
+
+`'auto'` — Symfony сам выбирает актуальный надёжный алгоритм (сейчас это bcrypt/argon2 в
+зависимости от окружения) и при необходимости позже сможет мигрировать на более новый, не ломая
+уже сохранённые хэши.
+
+## UserPasswordHasherInterface
+
+Хэширование пароля при регистрации — это сервис, который запрашивается через autowiring, как
+`EntityManagerInterface`:
+
+```php
+public function register(UserPasswordHasherInterface $hasher): JsonResponse
+{
+    $user = new User();
+    $user->setEmail($email);
+    $user->setPassword($hasher->hashPassword($user, $plainPassword));
+    // ...
+}
+```
+
+Обрати внимание: `hashPassword()` принимает сам объект `$user` первым аргументом — так сервис
+может учесть, для какого именно класса пользователя выбран хэшер (в реальных проектах их может
+быть несколько, если в приложении несколько разных типов аккаунтов).
+
+## Firewalls пока не при делах
+
+Конфигурация `security.yaml` в этом уроке содержит только `password_hashers` — фаервол (кто и как
+проходит аутентификацию на каждый запрос) выключен: `firewalls: { main: { security: false } }`.
+Хэширование пароля само по себе не требует ни аутентификатора, ни провайдера пользователей — это
+чистая функция «пароль → хэш». Провайдеры, фаерволы и вход по паролю — тема следующего урока.
+
+<CodeExercise exerciseId="user-register" />
+
+<Quiz quizId="user-entity" />

@@ -21,6 +21,11 @@ import { validationConstraintsExercise } from "./validation-constraints";
 import { formSubmitExercise } from "./form-submit";
 import { flashMessagesExercise } from "./flash-messages";
 import { bookshelfFormExercise } from "./bookshelf-form";
+import { userRegisterExercise } from "./user-register";
+import { apiLoginAuthenticatorExercise } from "./api-login-authenticator";
+import { rolesControllerExercise } from "./roles-controller";
+import { bookVoterExercise } from "./book-voter";
+import { bookshelfSecureExercise } from "./bookshelf-secure";
 
 export const exercises: Record<string, Exercise> = {
   [oopWarmupExercise.id]: oopWarmupExercise,
@@ -45,6 +50,11 @@ export const exercises: Record<string, Exercise> = {
   [formSubmitExercise.id]: formSubmitExercise,
   [flashMessagesExercise.id]: flashMessagesExercise,
   [bookshelfFormExercise.id]: bookshelfFormExercise,
+  [userRegisterExercise.id]: userRegisterExercise,
+  [apiLoginAuthenticatorExercise.id]: apiLoginAuthenticatorExercise,
+  [rolesControllerExercise.id]: rolesControllerExercise,
+  [bookVoterExercise.id]: bookVoterExercise,
+  [bookshelfSecureExercise.id]: bookshelfSecureExercise,
 };
 
 export function getExercise(id: string): Exercise | undefined {
