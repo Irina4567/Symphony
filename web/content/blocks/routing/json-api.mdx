@@ -22,6 +22,8 @@ public function list(): JsonResponse
 Второй аргумент — код ответа, как и у обычного `Response`: `new JsonResponse($data, 201)` для
 только что созданного ресурса, `new JsonResponse(['error' => '...'], 404)` для ошибки.
 
+![JsonResponse = Response + автоматика: тело сериализуется в JSON, заголовок Content-Type: application/json выставляется сам](/images/routing/json-response.png)
+
 ## Разбор JSON-тела запроса
 
 Раз клиент присылает JSON, а не form-data, читаем сырое тело и декодируем сами:
@@ -37,6 +39,8 @@ public function create(Request $request): JsonResponse
 Без `true` вторым аргументом `json_decode` вернёт объект `stdClass` вместо массива — работать
 с ним менее удобно, и во всём курсе мы договариваемся использовать именно массивы.
 
+![Разбор JSON-тела запроса: JSON-объект с полями title и author через json_decode(..., true) превращается в ассоциативный массив; забыл true — получишь stdClass](/images/routing/parsing-json-body.png)
+
 ## Ручная валидация — до компонента Validator
 
 Компонент Validator (с атрибутами `#[Assert\NotBlank]` и т.д.) появится в блоке про формы — это
@@ -51,6 +55,8 @@ if (empty($data['title']) || empty($data['author'])) {
 
 `empty()` тут удачнее, чем `isset()` — он также отсеет случай, когда поле пришло, но пустой
 строкой (`"title": ""`), а не просто отсутствует в JSON.
+
+![Ручная валидация до Validator: title проходит проверку, author — пустая строка — не проходит; empty() ловит и пустую строку, а не только отсутствие поля, ответ — 400 title and author are required](/images/routing/manual-validation-before-validator.png)
 
 ## Маленький, но важный нюанс: кодировка
 

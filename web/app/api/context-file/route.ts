@@ -19,7 +19,11 @@ export async function GET(request: Request) {
   // (и для показа, и для того, что реально кладётся в контейнер при запуске).
   if (exerciseId) {
     const exercise = getExercise(exerciseId);
-    if (exercise?.mode === "symfony-app") {
+    if (
+      exercise?.mode === "symfony-app" ||
+      exercise?.mode === "symfony-phpunit" ||
+      exercise?.mode === "symfony-console"
+    ) {
       const override = exercise.fixtureOverrides?.find((file) => file.path === requestedPath);
       if (override) {
         return NextResponse.json({ path: requestedPath, content: override.content });

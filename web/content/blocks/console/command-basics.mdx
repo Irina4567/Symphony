@@ -1,0 +1,70 @@
+До сих пор весь код курса отвечал на HTTP-запросы: контроллер получал `Request`, возвращал
+`Response`. Но у Symfony-приложения есть и второй, не менее важный вход — терминал. `bin/console`
+(с которым ты уже сталкивался в Блоке 0 — `php bin/console list`, `php bin/console about`) — это не
+магия, а такое же полноценное Symfony-приложение, только его "запросы" приходят из командной
+строки, а не по HTTP. Всё, что видно в `bin/console list` — обычные классы, которые можно писать
+самому.
+
+## Command: класс с одним обязательным методом
+
+```php
+namespace App\Command;
+
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+#[AsCommand(name: 'app:hello')]
+class HelloCommand extends Command
+{
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $output->writeln('Привет из консоли Symfony!');
+
+        return Command::SUCCESS;
+    }
+}
+```
+
+Запускается так же, как любая встроенная команда:
+
+```bash
+php bin/console app:hello
+# Привет из консоли Symfony!
+```
+
+Разберём по частям:
+
+- **`#[AsCommand(name: 'app:hello')]`** — регистрирует класс как команду с конкретным именем.
+  Префикс `app:` — просто соглашение (как `doctrine:`, `cache:` у встроенных команд), помогает
+  отличать команды проекта от команд бандлов в общем списке `bin/console list`.
+- **`extends Command`** — базовый класс из компонента Console, откуда приходит вся
+  инфраструктура (`configure()`, `execute()`, константы `Command::SUCCESS`/`FAILURE`).
+- **`execute(InputInterface $input, OutputInterface $output): int`** — сердце команды. `$input` —
+  всё, что передано при запуске (аргументы, опции — про них следующий урок), `$output` — то, что
+  команда печатает в терминал. Возвращаемое значение — код завершения процесса.
+
+## OutputInterface — как Response, только для терминала
+
+`$output->writeln('...')` печатает строку и переводит строку — концептуально то же самое, что
+`return new Response(...)` в контроллере: способ вернуть результат работы вовне. Разница только в
+канале — не HTTP-ответ браузеру, а текст в stdout того, кто вызвал команду (человек в терминале
+или другой скрипт).
+
+## Код завершения: не просто число
+
+```php
+return Command::SUCCESS; // int(0)
+return Command::FAILURE; // int(1)
+return Command::INVALID; // int(2) — некорректное использование команды
+```
+
+Это не декоративная деталь. Код завершения процесса — то, что читает `$?` в shell сразу после
+вызова команды, и то, на чём строятся CI-пайплайны и cron-скрипты (`php bin/console app:hello ||
+echo "упало"`). Текст в `$output` — для человека, код завершения — для автоматизации. Подробнее об
+этом различии — в последнем уроке блока.
+
+<CodeExercise exerciseId="hello-command" />
+
+<Quiz quizId="command-basics" />

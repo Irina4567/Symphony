@@ -1,0 +1,70 @@
+Команды из прошлых двух уроков были самодостаточными — вся логика умещалась в `execute()` без
+единой зависимости. Но настоящие консольные команды почти всегда что-то делают с приложением:
+читают из базы, вызывают сервис, публикуют событие. Хорошая новость — DI-контейнер (Блок 6) не
+делает различий между контроллером и командой.
+
+## Конструктор — та же точка входа, что и у контроллера
+
+```php
+namespace App\Command;
+
+use App\Entity\Book;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+#[AsCommand(name: 'app:book-count')]
+class BookCountCommand extends Command
+{
+    public function __construct(private readonly EntityManagerInterface $em)
+    {
+        parent::__construct();
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $count = $this->em->getRepository(Book::class)->count([]);
+        $output->writeln("Книг в каталоге: {$count}");
+
+        return Command::SUCCESS;
+    }
+}
+```
+
+`EntityManagerInterface $em` в конструкторе автовайрится ровно так же, как в контроллере из Блока
+3 — с одной оговоркой: **не забыть вызвать `parent::__construct()`**. Базовый класс `Command`
+использует конструктор для собственной инициализации (в частности, чтения имени из `#[AsCommand]`),
+и если её пропустить, команда упадёт с ошибкой ещё до `execute()`.
+
+## count([]) вместо count(findAll())
+
+```php
+$this->em->getRepository(Book::class)->count([]);
+```
+
+Это транслируется Doctrine в `SELECT COUNT(*) FROM book` — константный по памяти запрос независимо
+от размера таблицы. `count($repository->findAll())` вместо этого гидратирует **каждую** строку в
+объект `Book`, только чтобы посчитать их количество — на таблице с миллионом книг разница между
+этими двумя строчками решает, упадёт скрипт по памяти или нет.
+
+## setupCommands этого блока — та же команда, что и в Блоке 3
+
+Упражнения этого урока используют `php bin/console app:seed-books` как `setupCommand` —
+ту же самую команду сидинга, что помогала готовить данные для упражнений Блока 3 про Doctrine.
+Ничего нового в ней нет специально для консольных команд — она демонстрирует то же самое: сервис
+(`EntityManagerInterface`) в конструкторе, вызов из `execute()`. Полезно открыть её в блоке «Файлы
+проекта» под упражнением — это готовый пример команды с DI, написанный тем же способом, что и та,
+которую предстоит написать в мини-проекте этого блока.
+
+## Не только Doctrine
+
+Хотя пример выше — про `EntityManagerInterface`, принцип общий для любого сервиса: логгер,
+HTTP-клиент, свой сервис из `src/Service/` (Блок 6) — всё, что автовайрится в контроллере,
+автовайрится и в команде. Консольная команда — просто ещё один "потребитель" контейнера, наравне с
+контроллерами и слушателями событий.
+
+<CodeExercise exerciseId="book-count-command" />
+
+<Quiz quizId="services-in-commands" />

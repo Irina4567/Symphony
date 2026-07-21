@@ -30,6 +30,14 @@ import { dispatchBasicsQuiz } from "./dispatch-basics";
 import { customEventQuiz } from "./custom-event";
 import { listenersQuiz } from "./listeners";
 import { prioritiesQuiz } from "./priorities";
+import { unitTestBasicsQuiz } from "./unit-test-basics";
+import { kernelTestCaseQuiz } from "./kernel-test-case";
+import { webTestCaseQuiz } from "./web-test-case";
+import { testSetupAndFixturesQuiz } from "./test-setup-and-fixtures";
+import { commandBasicsQuiz } from "./command-basics";
+import { argumentsAndOptionsQuiz } from "./arguments-and-options";
+import { servicesInCommandsQuiz } from "./services-in-commands";
+import { consoleIoAndErrorsQuiz } from "./console-io-and-errors";
 
 export const quizzes: Record<string, Quiz> = {
   [whatIsSymfonyQuiz.id]: whatIsSymfonyQuiz,
@@ -63,6 +71,14 @@ export const quizzes: Record<string, Quiz> = {
   [customEventQuiz.id]: customEventQuiz,
   [listenersQuiz.id]: listenersQuiz,
   [prioritiesQuiz.id]: prioritiesQuiz,
+  [unitTestBasicsQuiz.id]: unitTestBasicsQuiz,
+  [kernelTestCaseQuiz.id]: kernelTestCaseQuiz,
+  [webTestCaseQuiz.id]: webTestCaseQuiz,
+  [testSetupAndFixturesQuiz.id]: testSetupAndFixturesQuiz,
+  [commandBasicsQuiz.id]: commandBasicsQuiz,
+  [argumentsAndOptionsQuiz.id]: argumentsAndOptionsQuiz,
+  [servicesInCommandsQuiz.id]: servicesInCommandsQuiz,
+  [consoleIoAndErrorsQuiz.id]: consoleIoAndErrorsQuiz,
 };
 
 export function getQuiz(id: string): Quiz | undefined {

@@ -18,6 +18,8 @@ public function search(Request $request): Response
 }
 ```
 
+![Request входит, Response выходит: Controller принимает Request с тайп-хинтом в аргументах — Symfony сам его передаст](/images/routing/request-in-response-out.png)
+
 ## Query-параметры vs параметры пути
 
 Мы уже видели параметры пути (`{id}` в `/books/{id}`) — они обязательны для совпадения маршрута.
@@ -32,6 +34,8 @@ $request->query->has('debug');        // bool — есть ли параметр
 
 `$request->query` — это `InputBag` (специализированный контейнер параметров), а не голый массив,
 поэтому у него есть typed-геттеры вроде `getInt()`/`getBoolean()`, а не только `get()`.
+
+![Query-параметры vs параметры пути: /books/ID — обязательная часть маршрута, ?lang=en&page=2 — необязательное уточнение, доступное через $request->query->get()](/images/routing/query-vs-path-parameters.png)
 
 ## Тело запроса
 
@@ -52,6 +56,8 @@ $raw = $request->getContent(); // '{"title":"Dune","author":"Frank Herbert"}'
 тип) — это **не** повод отвечать 500. Пятисотка сигнализирует о поломке на сервере; если сервер
 корректно распознал невалидный запрос и вежливо на него ответил — это как раз штатная работа,
 код должен быть 400.
+
+![400 или 500 — кто виноват: 400 — ошибка клиента, сервер вежливо отказал; 500 — ошибка сервера, что-то сломалось внутри](/images/routing/400-vs-500.png)
 
 <CodeExercise exerciseId="greet-query" />
 

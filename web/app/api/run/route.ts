@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getExercise } from "@/content/exercises";
-import type { Check, HttpCheck } from "@/content/types";
+import type { Check, HttpCheck, ConsoleCheck } from "@/content/types";
 
 const SANDBOX_URL = process.env.SANDBOX_URL ?? "http://localhost:4000";
 
@@ -13,6 +13,8 @@ const requestSchema = z.object({
 interface CheckResult {
   description: string;
   passed: boolean;
+  /** Для symfony-phpunit: сообщение об ошибке/провале от самого PHPUnit. */
+  detail?: string;
 }
 
 function evaluateStdoutCheck(check: Check, stdout: string): CheckResult {
@@ -46,6 +48,28 @@ function evaluateHttpCheck(
       return {
         description: check.description,
         passed: new RegExp(check.pattern, check.flags).test(result.body),
+      };
+  }
+}
+
+function evaluateConsoleCheck(
+  check: ConsoleCheck,
+  invocationResults: Map<string, { exitCode: number | null; stdout: string; stderr: string }>
+): CheckResult {
+  const result = invocationResults.get(check.invocationId);
+  if (!result) return { description: check.description, passed: false };
+  const output = result.stdout + result.stderr;
+  switch (check.type) {
+    case "console-exit-code":
+      return { description: check.description, passed: result.exitCode === check.expectedExitCode };
+    case "console-output-contains":
+      return { description: check.description, passed: output.includes(check.value) };
+    case "console-output-not-contains":
+      return { description: check.description, passed: !output.includes(check.value) };
+    case "console-output-matches":
+      return {
+        description: check.description,
+        passed: new RegExp(check.pattern, check.flags).test(output),
       };
   }
 }
@@ -98,20 +122,111 @@ export async function POST(request: Request) {
     });
   }
 
-  // symfony-app: targetPath и requests идут из определения упражнения на сервере,
-  // от клиента принимаем только сам код — так же, как checks никогда не приходят от клиента.
+  if (exercise.mode === "symfony-app") {
+    // targetPath и requests идут из определения упражнения на сервере, от клиента принимаем
+    // только сам код — так же, как checks никогда не приходят от клиента.
+    let sandboxResult: {
+      requests: { id: string; status: number | null; body: string }[];
+      stderr: string;
+      timedOut: boolean;
+    };
+    try {
+      sandboxResult = await callSandbox(
+        {
+          mode: "symfony-app",
+          code: parsed.data.code,
+          targetPath: exercise.targetPath,
+          requests: exercise.requests,
+          setupCommands: exercise.setupCommands,
+          fixtureOverrides: exercise.fixtureOverrides,
+        },
+        35_000
+      );
+    } catch {
+      return NextResponse.json(
+        { error: `Не удалось связаться с песочницей на ${SANDBOX_URL}. Запущен ли sandbox-сервис?` },
+        { status: 502 }
+      );
+    }
+
+    const resultsById = new Map(sandboxResult.requests.map((result) => [result.id, result]));
+    const checkResults = exercise.checks.map((check) => evaluateHttpCheck(check, resultsById));
+    const requestsForClient = exercise.requests.map((spec) => {
+      const result = resultsById.get(spec.id);
+      return {
+        id: spec.id,
+        method: spec.method,
+        path: spec.path,
+        status: result?.status ?? null,
+        body: result?.body ?? "",
+      };
+    });
+
+    return NextResponse.json({
+      mode: "symfony-app",
+      requests: requestsForClient,
+      stderr: sandboxResult.stderr,
+      timedOut: sandboxResult.timedOut,
+      checksPassed: checkResults.every((result) => result.passed),
+      checkResults,
+    });
+  }
+
+  if (exercise.mode === "symfony-phpunit") {
+    // symfony-phpunit: проверки не авторские — они приходят напрямую из отчёта PHPUnit о том,
+    // какие тест-методы, написанные учеником, прошли. Имя метода становится описанием проверки.
+    let sandboxResult: {
+      tests: { name: string; passed: boolean; message?: string }[];
+      stderr: string;
+      timedOut: boolean;
+    };
+    try {
+      sandboxResult = await callSandbox(
+        {
+          mode: "symfony-phpunit",
+          code: parsed.data.code,
+          targetPath: exercise.targetPath,
+          setupCommands: exercise.setupCommands,
+          fixtureOverrides: exercise.fixtureOverrides,
+        },
+        35_000
+      );
+    } catch {
+      return NextResponse.json(
+        { error: `Не удалось связаться с песочницей на ${SANDBOX_URL}. Запущен ли sandbox-сервис?` },
+        { status: 502 }
+      );
+    }
+
+    const checkResults: CheckResult[] = sandboxResult.tests.map((test) => ({
+      description: test.name,
+      passed: test.passed,
+      detail: test.message,
+    }));
+
+    return NextResponse.json({
+      mode: "symfony-phpunit",
+      stderr: sandboxResult.stderr,
+      timedOut: sandboxResult.timedOut,
+      checksPassed: checkResults.length > 0 && checkResults.every((result) => result.passed),
+      checkResults,
+    });
+  }
+
+  // symfony-console: targetPath, invocations и checks идут из определения упражнения на
+  // сервере — так же, как requests/checks у symfony-app никогда не приходят от клиента.
   let sandboxResult: {
-    requests: { id: string; status: number | null; body: string }[];
+    invocations: { id: string; exitCode: number | null; stdout: string; stderr: string }[];
     stderr: string;
     timedOut: boolean;
   };
   try {
     sandboxResult = await callSandbox(
       {
-        mode: "symfony-app",
+        mode: "symfony-console",
         code: parsed.data.code,
         targetPath: exercise.targetPath,
-        requests: exercise.requests,
+        invocations: exercise.invocations,
         setupCommands: exercise.setupCommands,
         fixtureOverrides: exercise.fixtureOverrides,
       },
@@ -124,22 +239,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const resultsById = new Map(sandboxResult.requests.map((result) => [result.id, result]));
-  const checkResults = exercise.checks.map((check) => evaluateHttpCheck(check, resultsById));
-  const requestsForClient = exercise.requests.map((spec) => {
-    const result = resultsById.get(spec.id);
+  const invocationsById = new Map(sandboxResult.invocations.map((result) => [result.id, result]));
+  const checkResults = exercise.checks.map((check) => evaluateConsoleCheck(check, invocationsById));
+  const invocationsForClient = exercise.invocations.map((spec) => {
+    const result = invocationsById.get(spec.id);
     return {
       id: spec.id,
-      method: spec.method,
-      path: spec.path,
-      status: result?.status ?? null,
-      body: result?.body ?? "",
+      args: spec.args,
+      exitCode: result?.exitCode ?? null,
+      stdout: result?.stdout ?? "",
+      stderr: result?.stderr ?? "",
     };
   });
 
   return NextResponse.json({
-    mode: "symfony-app",
-    requests: requestsForClient,
+    mode: "symfony-console",
+    invocations: invocationsForClient,
     stderr: sandboxResult.stderr,
     timedOut: sandboxResult.timedOut,
     checksPassed: checkResults.every((result) => result.passed),

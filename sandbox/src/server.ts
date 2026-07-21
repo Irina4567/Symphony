@@ -3,6 +3,8 @@ import cors from "cors";
 import { z } from "zod";
 import { runPhp } from "./docker-runner.js";
 import { runSymfonyApp } from "./symfony-app-runner.js";
+import { runSymfonyPhpUnit } from "./symfony-phpunit-runner.js";
+import { runSymfonyConsole } from "./symfony-console-runner.js";
 import { Semaphore } from "./semaphore.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -35,6 +37,30 @@ const runRequestSchema = z.discriminatedUnion("mode", [
       .max(5)
       .optional(),
   }),
+  z.object({
+    mode: z.literal("symfony-phpunit"),
+    code: z.string().min(1).max(MAX_CODE_LENGTH),
+    targetPath: z.string().min(1).max(200),
+    setupCommands: z.array(z.string().min(1).max(300)).max(5).optional(),
+    fixtureOverrides: z
+      .array(z.object({ path: z.string().min(1).max(200), content: z.string().max(MAX_CODE_LENGTH) }))
+      .max(5)
+      .optional(),
+  }),
+  z.object({
+    mode: z.literal("symfony-console"),
+    code: z.string().min(1).max(MAX_CODE_LENGTH),
+    targetPath: z.string().min(1).max(200),
+    invocations: z
+      .array(z.object({ id: z.string(), args: z.array(z.string().min(1).max(300)).min(1).max(10) }))
+      .min(1)
+      .max(5),
+    setupCommands: z.array(z.string().min(1).max(300)).max(5).optional(),
+    fixtureOverrides: z
+      .array(z.object({ path: z.string().min(1).max(200), content: z.string().max(MAX_CODE_LENGTH) }))
+      .max(5)
+      .optional(),
+  }),
 ]);
 
 const app = express();
@@ -57,11 +83,28 @@ app.post("/run", async (req, res) => {
     if (parsed.data.mode === "plain-php") {
       const result = await runPhp(parsed.data.code);
       res.json(result);
-    } else {
+    } else if (parsed.data.mode === "symfony-app") {
       const result = await runSymfonyApp({
         code: parsed.data.code,
         targetPath: parsed.data.targetPath,
         requests: parsed.data.requests,
+        setupCommands: parsed.data.setupCommands,
+        fixtureOverrides: parsed.data.fixtureOverrides,
+      });
+      res.json(result);
+    } else if (parsed.data.mode === "symfony-phpunit") {
+      const result = await runSymfonyPhpUnit({
+        code: parsed.data.code,
+        targetPath: parsed.data.targetPath,
+        setupCommands: parsed.data.setupCommands,
+        fixtureOverrides: parsed.data.fixtureOverrides,
+      });
+      res.json(result);
+    } else {
+      const result = await runSymfonyConsole({
+        code: parsed.data.code,
+        targetPath: parsed.data.targetPath,
+        invocations: parsed.data.invocations,
         setupCommands: parsed.data.setupCommands,
         fixtureOverrides: parsed.data.fixtureOverrides,
       });

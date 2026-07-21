@@ -1,0 +1,65 @@
+`BookFormatterService` из прошлого урока не имел зависимостей — `new` был достаточен. Но что если
+тестируемый код опирается на настоящий `EntityManager`, реальную конфигурацию, реальный DI
+контейнер? Для этого PHPUnit-тест нужно "подключить" к приложению — этим занимается
+`KernelTestCase`.
+
+## bootKernel(): поднимаем настоящее приложение
+
+```php
+namespace App\Tests\Repository;
+
+use App\Entity\Author;
+use App\Entity\Book;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+class BookRepositoryTest extends KernelTestCase
+{
+    public function testPersistAndFindBook(): void
+    {
+        self::bootKernel();
+        $em = self::getContainer()->get('doctrine')->getManager();
+
+        $author = new Author();
+        $author->setName('Frank Herbert');
+        $em->persist($author);
+
+        $book = new Book();
+        $book->setTitle('Dune')->setYear(1965)->setAuthor($author);
+        $em->persist($book);
+        $em->flush();
+
+        $found = $em->getRepository(Book::class)->findOneBy(['title' => 'Dune']);
+        $this->assertNotNull($found);
+        $this->assertSame(1965, $found->getYear());
+    }
+}
+```
+
+- **`self::bootKernel()`** — собирает и загружает контейнер приложения, точно так же, как это
+  происходит при настоящем HTTP-запросе (но без самого HTTP).
+- **`self::getContainer()`** — доступ к собранному контейнеру. Работает только ПОСЛЕ
+  `bootKernel()` — если вызвать раньше, будет исключение.
+- **`->get('doctrine')->getManager()`** — тот самый `EntityManagerInterface`, который во всех
+  прошлых блоках просто появлялся сам через автовайринг (Блок 6) — здесь та же связка, только
+  вручную запрошенная из контейнера.
+
+## Тестовое окружение — не то же самое, что рабочее
+
+Запущенный тест работает в отдельном окружении `test` (`APP_ENV=test`) — со своей собственной
+базой данных, отдельной от той, с которой ты работаешь через `bin/console` или во время обычных
+упражнений этого курса. Это осознанно: тесты не должны портить рабочие данные, и наоборот —
+рабочие данные не должны влиять на результат тестов. Именно поэтому упражнения этого блока
+создают схему через `doctrine:schema:create` с явным `APP_ENV=test` перед запуском тестов — в
+своей отдельной песочнице.
+
+## KernelTestCase — не для HTTP, а для "изнутри"
+
+`KernelTestCase` даёт доступ к сервисам приложения, но НЕ умеет делать HTTP-запросы к
+контроллерам — для этого есть более специализированный `WebTestCase` (следующий урок), который
+расширяет `KernelTestCase` и добавляет именно эту возможность. `KernelTestCase` сам по себе
+удобен, когда нужно протестировать логику, завязанную на сервисы контейнера (репозитории, другие
+сервисы), но без похода через целый HTTP-стек.
+
+<CodeExercise exerciseId="book-repository-test" />
+
+<Quiz quizId="kernel-test-case" />

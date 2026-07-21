@@ -1,0 +1,56 @@
+До сих пор все проверки этого сайта делали HTTP-запросы через `curl` изнутри контейнера. Но
+писать HTTP-тесты через `curl` в реальном проекте неудобно и медленно — сравнивать нужно не
+сырой текст, а разобранные значения, а поднимать настоящий сервер ради каждого теста слишком
+дорого. В Symfony для этого есть `WebTestCase` — тестовый **клиент**, имитирующий HTTP-запрос,
+но без единого реального сокета.
+
+## createClient(): запрос без сети
+
+```php
+namespace App\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+class TestableBookApiControllerTest extends WebTestCase
+{
+    public function testShowExistingBook(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/api/testable-books/2');
+
+        $this->assertResponseIsSuccessful();
+        $data = json_decode($client->getResponse()->getContent(), true);
+        $this->assertSame('Clean Code', $data['title']);
+    }
+}
+```
+
+`static::createClient()` сам вызывает `bootKernel()` внутри себя (в отличие от прошлого урока, где
+это приходилось делать вручную) и возвращает объект-клиент, умеющий "отправлять" запросы **прямо
+через ядро приложения**, без реального HTTP — запрос доходит до того же самого роутинга,
+контроллера и всего остального стека, что и настоящий запрос, просто без сетевого сокета. Отсюда и
+скорость: тест из примера выше выполняется за миллисекунды.
+
+## Готовые проверки ответа
+
+```php
+$this->assertResponseIsSuccessful();          // 2xx
+$this->assertResponseStatusCodeSame(404);      // конкретный код
+$this->assertResponseRedirects();              // 3xx с Location
+```
+
+Это часть `WebTestAssertionsTrait`, который подключён в `WebTestCase` — готовые проверки прямо
+поверх `$client`, без необходимости самому доставать код ответа. Для самого тела ответа
+специальной JSON-проверки в этой версии нет — тело разбирается обычным `json_decode()`, а дальше
+идут привычные `assertSame`/`assertArrayHasKey` по конкретным полям.
+
+## Тот же контроллер, что и всегда
+
+`TestableBookApiController`, который тестирует упражнение ниже, устроен ровно так же, как
+контроллеры, которые ты писал в блоках 1, 3 и 5 — `EntityManagerInterface`, `Route`-атрибуты,
+`JsonResponse`. `WebTestCase` не требует ничего специального от самого контроллера — с точки
+зрения кода приложения тестовый запрос неотличим от настоящего.
+
+<CodeExercise exerciseId="book-api-test" />
+
+<Quiz quizId="web-test-case" />

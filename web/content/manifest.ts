@@ -522,6 +522,127 @@ export const manifest: BlockManifestEntry[] = [
       practiceExerciseId: "bookshelf-notify",
     },
   },
+  {
+    slug: "testing",
+    title: "Блок 8. Тестирование",
+    description:
+      "PHPUnit по-настоящему: юнит-тесты в изоляции, KernelTestCase с реальным DI-контейнером, WebTestCase с in-process HTTP-клиентом, setUp() и независимые друг от друга тесты. Вместо ручных HTTP-проверок этого сайта — автоматические тесты, которые пишет сам ученик.",
+    lessons: [
+      {
+        slug: "unit-test-basics",
+        title: "PHPUnit: юнит-тест без фреймворка",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "kernel-test-case",
+        title: "KernelTestCase: тестируем с контейнером",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "web-test-case",
+        title: "WebTestCase: тестируем HTTP через клиент",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "test-setup-and-fixtures",
+        title: "setUp() и подготовка данных",
+        estimatedMinutes: 10,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 8: набор тестов на API каталога",
+      description:
+        "Напиши полноценный набор из пяти тестов для TestableBookApiController — стабильного API каталога книг: список, книга по id (успех и 404), создание и появление созданной книги в последующем списке.",
+      note: "В этом блоке 'проверки' — это не заранее описанные HTTP-чекеры сайта, а сами тест-методы, которые пишет ученик: сайт запускает написанный PHPUnit-тест и показывает pass/fail по каждому методу — ровно то же самое, что увидел бы разработчик в терминале.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "TestableBookApiController — стабильный, всегда одинаковый API (список/показ/создание книг) — тебе нужно написать только тесты на него, как в уроке про WebTestCase.",
+        },
+        {
+          id: "read-and-404",
+          title: "Начни с чтения",
+          description: "testListReturnsSeededBooks, testShowReturnsBookDetails и testShowMissingBookReturns404 — самые простые, без побочных эффектов.",
+        },
+        {
+          id: "create-and-verify",
+          title: "Проверь создание и его побочный эффект",
+          description: "testCreateBookReturns201 проверяет сам ответ на создание; testCreatedBookAppearsInSubsequentList — что книга реально сохранилась, через отдельный GET-запрос.",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все тесты",
+          description: "Нажми «Запустить» и добейся, чтобы все 5 тестов стали зелёными.",
+          expectedResult: "Все 5 тестов проходят.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-test-suite",
+    },
+  },
+  {
+    slug: "console",
+    title: "Блок 9. Console-команды",
+    description:
+      "Второй вход в Symfony-приложение, помимо HTTP: класс Command, #[AsCommand], аргументы и опции, автовайринг сервисов в конструкторе, SymfonyStyle и честные коды завершения. BookShelf получает команду, которая добавляет книги пачкой из CSV-файла — вместо одной книги за один HTTP-запрос.",
+    lessons: [
+      {
+        slug: "command-basics",
+        title: "Command: базовая структура команды",
+        estimatedMinutes: 8,
+      },
+      {
+        slug: "arguments-and-options",
+        title: "Аргументы и опции: InputArgument, InputOption",
+        estimatedMinutes: 10,
+      },
+      {
+        slug: "services-in-commands",
+        title: "Сервисы в команде: автовайринг в конструкторе",
+        estimatedMinutes: 8,
+      },
+      {
+        slug: "console-io-and-errors",
+        title: "SymfonyStyle и коды завершения",
+        estimatedMinutes: 10,
+      },
+    ],
+    miniProject: {
+      title: "BookShelf, часть 9: импорт книг из CSV одной командой",
+      description:
+        "Напиши ImportBooksCommand — команду, которая читает CSV-файл с книгами и сохраняет их в базу: обязательный аргумент с путём к файлу, поиск-или-создание автора по имени, один flush() в конце, честный отчёт через SymfonyStyle.",
+      note: "Проверяется полностью автоматически прямо в песочнице — 5 проверок в режиме symfony-console: код завершения и вывод самой команды импорта, плюс независимая проверка через стабильную app:list-books, которая подтверждает, что все три книги реально сохранились в базе, а не только напечатались в терминале.",
+      steps: [
+        {
+          id: "understand-scope",
+          title: "Пойми, что уже готово",
+          description:
+            "Entity Author/Book, стабильная команда app:list-books (второй шаг проверки) и CSV-файл с тремя книгами уже зашиты в песочницу — тебе нужно написать только ImportBooksCommand.",
+        },
+        {
+          id: "configure-argument",
+          title: "Объяви обязательный аргумент file",
+          description:
+            "Без пути к CSV-файлу команда не имеет смысла — это аргумент, а не опция (см. урок про аргументы и опции). configure() уже дан в starter-коде.",
+        },
+        {
+          id: "parse-and-persist",
+          title: "Разбери CSV и сохрани книги",
+          description:
+            "fgetcsv() построчно, поиск автора по имени через репозиторий (или создание нового), новый Book на каждую строку — и один flush() после цикла, а не на каждой итерации.",
+        },
+        {
+          id: "green-checks",
+          title: "Прогони все проверки",
+          description:
+            "Нажми «Запустить» и обрати внимание на второй вызов (app:list-books) в результатах — это не часть твоей команды, а независимое подтверждение, что данные реально долетели до базы.",
+          expectedResult: "Все 5 проверок зелёные.",
+        },
+      ],
+      practiceExerciseId: "bookshelf-import-books",
+    },
+  },
 ];
 
 export function getBlock(blockSlug: string): BlockManifestEntry | undefined {

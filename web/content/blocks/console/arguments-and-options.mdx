@@ -1,0 +1,80 @@
+`app:hello` из прошлого урока всегда делает одно и то же — интересного мало. Реальные команды почти
+всегда принимают вход: путь к файлу для импорта, id сущности, флаг `--dry-run`. В компоненте
+Console для этого есть два разных инструмента — **аргументы** и **опции** — и важно не путать,
+когда какой нужен.
+
+## configure(): объявляем интерфейс команды
+
+```php
+namespace App\Command;
+
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+#[AsCommand(name: 'app:greet')]
+class GreetCommand extends Command
+{
+    protected function configure(): void
+    {
+        $this
+            ->addArgument('name', InputArgument::REQUIRED, 'Кого поприветствовать')
+            ->addOption('shout', null, InputOption::VALUE_NONE, 'Вывести приветствие капсом');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $name = $input->getArgument('name');
+        $greeting = "Привет, {$name}!";
+
+        if ($input->getOption('shout')) {
+            $greeting = mb_strtoupper($greeting);
+        }
+
+        $output->writeln($greeting);
+
+        return Command::SUCCESS;
+    }
+}
+```
+
+```bash
+php bin/console app:greet Ada
+# Привет, Ada!
+
+php bin/console app:greet Ada --shout
+# ПРИВЕТ, ADA!
+```
+
+## Аргумент: позиционное значение
+
+`addArgument('name', InputArgument::REQUIRED, '...')` — значение передаётся по позиции, без имени
+(`app:greet Ada`, а не `app:greet --name=Ada`). `InputArgument::REQUIRED` означает, что без него
+компонент Console сам остановит выполнение с понятной ошибкой `Not enough arguments` — до того, как
+управление вообще дойдёт до `execute()`. Есть и `InputArgument::OPTIONAL` для необязательных
+значений (тогда `getArgument()` может вернуть `null`, если не задано значение по умолчанию).
+
+## Опция: именованный флаг
+
+`addOption('shout', null, InputOption::VALUE_NONE, '...')` — именованное значение с префиксом
+`--` (второй параметр — короткий алиас вида `-s`, здесь не используется). Опции почти всегда
+необязательны по смыслу — это способ включить дополнительное поведение, а не передать обязательные
+данные. Основные режимы:
+
+- **`InputOption::VALUE_NONE`** — флаг без значения: либо передан (`true`), либо нет (`false`).
+  Именно этот режим у `--shout`.
+- **`InputOption::VALUE_REQUIRED`** — опция обязана иметь значение (`--format=json`).
+- **`InputOption::VALUE_OPTIONAL`** — значение можно передать, а можно и нет.
+
+## Аргумент или опция: как выбирать
+
+Практическое правило: если без значения команда вообще не имеет смысла — это аргумент
+(`app:import-books` без пути к файлу нечего импортировать). Если значение включает/меняет
+поведение, но команда работает и без него — это опция (`--dry-run`, `--shout`, `--format`).
+
+<CodeExercise exerciseId="greet-command" />
+
+<Quiz quizId="arguments-and-options" />

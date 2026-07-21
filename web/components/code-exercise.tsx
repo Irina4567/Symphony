@@ -14,6 +14,7 @@ import { useHydrated } from "@/lib/use-hydrated";
 interface CheckResult {
   description: string;
   passed: boolean;
+  detail?: string;
 }
 
 type RunResponse =
@@ -33,6 +34,21 @@ type RunResponse =
       timedOut: boolean;
       checksPassed: boolean;
       checkResults: CheckResult[];
+    }
+  | {
+      mode: "symfony-phpunit";
+      stderr: string;
+      timedOut: boolean;
+      checksPassed: boolean;
+      checkResults: CheckResult[];
+    }
+  | {
+      mode: "symfony-console";
+      invocations: { id: string; args: string[]; exitCode: number | null; stdout: string; stderr: string }[];
+      stderr: string;
+      timedOut: boolean;
+      checksPassed: boolean;
+      checkResults: CheckResult[];
     };
 
 function statusColor(status: number | null): string {
@@ -44,18 +60,20 @@ function statusColor(status: number | null): string {
 
 function CheckList({ checks }: { checks: CheckResult[] }) {
   return (
-    <div className="space-y-1 border-t border-slate-700 pt-2">
+    <div className="space-y-1.5 border-t border-slate-700 pt-2">
       {checks.map((check, i) => (
-        <div
-          key={i}
-          className={cn("flex items-start gap-2", check.passed ? "text-success" : "text-danger")}
-        >
-          {check.passed ? (
-            <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
-          ) : (
-            <XCircle size={14} className="mt-0.5 shrink-0" />
+        <div key={i} className={cn(check.passed ? "text-success" : "text-danger")}>
+          <div className="flex items-start gap-2">
+            {check.passed ? (
+              <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
+            ) : (
+              <XCircle size={14} className="mt-0.5 shrink-0" />
+            )}
+            <span className="font-mono">{check.description}</span>
+          </div>
+          {!check.passed && check.detail && (
+            <pre className="ml-6 mt-1 whitespace-pre-wrap break-words text-slate-400">{check.detail}</pre>
           )}
-          <span>{check.description}</span>
         </div>
       ))}
     </div>
@@ -138,9 +156,9 @@ export function CodeExercise({ exerciseId }: { exerciseId: string }) {
 
   return (
     <>
-      {exercise.mode === "symfony-app" && exercise.contextFiles && exercise.contextFiles.length > 0 && (
-        <ContextFiles files={exercise.contextFiles} exerciseId={exerciseId} />
-      )}
+      {(exercise.mode === "symfony-app" || exercise.mode === "symfony-phpunit" || exercise.mode === "symfony-console") &&
+        exercise.contextFiles &&
+        exercise.contextFiles.length > 0 && <ContextFiles files={exercise.contextFiles} exerciseId={exerciseId} />}
       <div className="not-prose my-8 overflow-hidden rounded-xl border border-border bg-surface">
         <div className="border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
@@ -154,7 +172,7 @@ export function CodeExercise({ exerciseId }: { exerciseId: string }) {
           <p className="mt-1 text-sm text-muted">{exercise.description}</p>
         </div>
 
-        {exercise.mode === "symfony-app" && (
+        {(exercise.mode === "symfony-app" || exercise.mode === "symfony-phpunit" || exercise.mode === "symfony-console") && (
           <div className="flex items-center gap-2 border-b border-border bg-surface-muted px-4 py-1.5 text-xs text-muted">
             <FileCode2 size={13} />
             <code>{exercise.targetPath}</code>
@@ -232,6 +250,40 @@ export function CodeExercise({ exerciseId }: { exerciseId: string }) {
                     </span>
                   </div>
                   {req.body && <pre className="mt-2 whitespace-pre-wrap break-words text-slate-300">{req.body}</pre>}
+                </div>
+              ))}
+              {result.stderr && <pre className="whitespace-pre-wrap text-danger">{result.stderr}</pre>}
+              <CheckList checks={result.checkResults} />
+            </div>
+          )}
+
+          {result && result.mode === "symfony-phpunit" && (
+            <div className="space-y-2">
+              {result.stderr && <pre className="whitespace-pre-wrap text-danger">{result.stderr}</pre>}
+              {!result.stderr && result.checkResults.length === 0 && (
+                <p className="text-slate-500">PHPUnit не нашёл ни одного теста в этом файле.</p>
+              )}
+              <CheckList checks={result.checkResults} />
+            </div>
+          )}
+
+          {result && result.mode === "symfony-console" && (
+            <div className="space-y-2">
+              {result.invocations.map((inv) => (
+                <div key={inv.id} className="rounded-lg border border-slate-700 bg-black/20 p-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-300">$ php bin/console {inv.args.join(" ")}</span>
+                    <span
+                      className={cn(
+                        "ml-auto shrink-0 font-semibold",
+                        inv.exitCode === 0 ? "text-success" : "text-danger"
+                      )}
+                    >
+                      exit {inv.exitCode ?? "нет кода"}
+                    </span>
+                  </div>
+                  {inv.stdout && <pre className="mt-2 whitespace-pre-wrap break-words text-slate-300">{inv.stdout}</pre>}
+                  {inv.stderr && <pre className="mt-2 whitespace-pre-wrap break-words text-danger">{inv.stderr}</pre>}
                 </div>
               ))}
               {result.stderr && <pre className="whitespace-pre-wrap text-danger">{result.stderr}</pre>}

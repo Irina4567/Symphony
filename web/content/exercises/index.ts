@@ -36,6 +36,16 @@ import { bookCreatedEventExercise } from "./book-created-event";
 import { bookCreatedNotifierExercise } from "./book-created-notifier";
 import { priorityNotifierExercise } from "./priority-notifier";
 import { bookshelfNotifyExercise } from "./bookshelf-notify";
+import { bookFormatterTestExercise } from "./book-formatter-test";
+import { bookRepositoryTestExercise } from "./book-repository-test";
+import { bookApiTestExercise } from "./book-api-test";
+import { bookFullFlowTestExercise } from "./book-full-flow-test";
+import { bookshelfTestSuiteExercise } from "./bookshelf-test-suite";
+import { helloCommandExercise } from "./hello-command";
+import { greetCommandExercise } from "./greet-command";
+import { bookCountCommandExercise } from "./book-count-command";
+import { bookLookupCommandExercise } from "./book-lookup-command";
+import { bookshelfImportBooksExercise } from "./bookshelf-import-books";
 
 export const exercises: Record<string, Exercise> = {
   [oopWarmupExercise.id]: oopWarmupExercise,
@@ -75,6 +85,16 @@ export const exercises: Record<string, Exercise> = {
   [bookCreatedNotifierExercise.id]: bookCreatedNotifierExercise,
   [priorityNotifierExercise.id]: priorityNotifierExercise,
   [bookshelfNotifyExercise.id]: bookshelfNotifyExercise,
+  [bookFormatterTestExercise.id]: bookFormatterTestExercise,
+  [bookRepositoryTestExercise.id]: bookRepositoryTestExercise,
+  [bookApiTestExercise.id]: bookApiTestExercise,
+  [bookFullFlowTestExercise.id]: bookFullFlowTestExercise,
+  [bookshelfTestSuiteExercise.id]: bookshelfTestSuiteExercise,
+  [helloCommandExercise.id]: helloCommandExercise,
+  [greetCommandExercise.id]: greetCommandExercise,
+  [bookCountCommandExercise.id]: bookCountCommandExercise,
+  [bookLookupCommandExercise.id]: bookLookupCommandExercise,
+  [bookshelfImportBooksExercise.id]: bookshelfImportBooksExercise,
 };
 
 export function getExercise(id: string): Exercise | undefined {

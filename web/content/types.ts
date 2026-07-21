@@ -20,6 +20,22 @@ export type HttpCheck =
   | { type: "http-body-not-contains"; requestId: string; value: string; description: string }
   | { type: "http-body-matches"; requestId: string; pattern: string; flags?: string; description: string };
 
+export interface ConsoleInvocationSpec {
+  id: string;
+  /** Аргументы для bin/console, начиная с имени команды, например
+   *  ["app:import-books", "var/data/books.csv"]. */
+  args: string[];
+}
+
+/** Проверяются по объединённому выводу (stdout + stderr) конкретного вызова консоли —
+ *  SymfonyStyle пишет success()/error() в разные потоки, а для ученика это один и тот же
+ *  видимый вывод команды. */
+export type ConsoleCheck =
+  | { type: "console-exit-code"; invocationId: string; expectedExitCode: number; description: string }
+  | { type: "console-output-contains"; invocationId: string; value: string; description: string }
+  | { type: "console-output-not-contains"; invocationId: string; value: string; description: string }
+  | { type: "console-output-matches"; invocationId: string; pattern: string; flags?: string; description: string };
+
 interface ExerciseBase {
   id: string;
   title: string;
@@ -54,6 +70,33 @@ export type Exercise =
        *  функционально требуется более "поздняя" версия файла (например, Entity с constraints
        *  из следующего блока), а базовая фикстура, которую видят более ранние уроки, должна
        *  оставаться в границах уже пройденного материала. */
+      fixtureOverrides?: (ContextFile & { content: string })[];
+    })
+  | (ExerciseBase & {
+      mode: "symfony-phpunit";
+      /** Путь внутри Symfony-скелета, куда положить PHPUnit-тест ученика,
+       *  например tests/Service/BookFormatterServiceTest.php */
+      targetPath: string;
+      /** Консольные команды (например, создание тестовой БД), выполняются до запуска phpunit. */
+      setupCommands?: string[];
+      contextFiles?: ContextFile[];
+      fixtureOverrides?: (ContextFile & { content: string })[];
+      /** Явных checks нет: результат — это pass/fail каждого метода теста, который написал
+       *  сам ученик, взятый из отчёта PHPUnit. Имя метода становится описанием проверки. */
+    })
+  | (ExerciseBase & {
+      mode: "symfony-console";
+      /** Путь внутри Symfony-скелета, куда положить класс команды ученика,
+       *  например src/Command/ImportBooksCommand.php */
+      targetPath: string;
+      /** Консольные команды (например, doctrine:schema:create или сидинг), выполняются один
+       *  раз до всех invocations. */
+      setupCommands?: string[];
+      /** Последовательность запусков bin/console — каждый со своим именем команды и
+       *  аргументами; результат каждого доступен для checks по его id. */
+      invocations: ConsoleInvocationSpec[];
+      checks: ConsoleCheck[];
+      contextFiles?: ContextFile[];
       fixtureOverrides?: (ContextFile & { content: string })[];
     });
 
